@@ -3,9 +3,7 @@ import {
   Plus,
   Search,
   Filter,
-  Users,
   MoreHorizontal,
-  ChevronDown,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 

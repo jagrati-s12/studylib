@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   FolderOpen,
   Eye,
+  Folder,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { api } from '@/lib/api';
@@ -31,6 +32,25 @@ const ICON_OPTIONS = [
   'Code', 'Globe', 'Cpu', 'HardDrive', 'Network',
   'Lightbulb', 'Microscope', 'PenTool', 'Music', 'Camera',
 ] as const;
+
+// Subject colors from the user request palette
+const SUBJECT_PALETTE = {
+  fern: '#768E78',
+  pistachio: '#C6C09C',
+  fennel: '#EBDEC0',
+  cherryBlossom: '#FECDBE',
+  peony: '#E79897',
+  bluebell: '#B7CBDB',
+  honey: '#FCC88A',
+  clockwork: '#72583E',
+  cedar: '#7C7960',
+  latte: '#DBC4A5',
+  deepOlive: '#44422D',
+  mauve: '#755151',
+  weathered: '#A08670',
+  linen: '#FFF9F3',
+  cafeNoir: '#443223',
+};
 
 function getIconComponent(iconName?: string): React.ComponentType<{ size?: number; className?: string }> {
   if (!iconName) return BookOpen;
@@ -95,8 +115,15 @@ export default function NotesPage() {
   const [splitCount, setSplitCount] = useState<SplitCount>(2);
   const [openPanes, setOpenPanes] = useState<(Material | 'notes' | null)[]>([null, null]);
 
-  // Icon picker state
+  // Icon picker state & New Subject Modal
   const [iconPickerSubject, setIconPickerSubject] = useState<string | null>(null);
+  const [showNewSubjectModal, setShowNewSubjectModal] = useState(false);
+
+  // Nested folders state inside Materials
+  const [customFolders, setCustomFolders] = useState<string[]>(['Chapter 1 Notes', 'Extra References', 'Problem Sets']);
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   useEffect(() => {
     api.getSubjects().then((data) => {
@@ -116,6 +143,7 @@ export default function NotesPage() {
     setTopicsLoading(true);
     setActiveTopic(null);
     setMaterials([]);
+    setActiveFolder(null);
     const data = await api.getTopics(subject.id);
     setTopics(data);
     setTopicsLoading(false);
@@ -127,6 +155,7 @@ export default function NotesPage() {
     setMaterials(mats);
     setOpenPanes([null, null]);
     setSplitCount(2);
+    setActiveFolder(null);
   }
 
   function openInPane(item: Material | 'notes', paneIdx: number) {
@@ -184,8 +213,8 @@ export default function NotesPage() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-xs opacity-60">{activeSubject.name}</p>
-            <h2 className="font-display font-bold text-lg truncate">{activeTopic.title}</h2>
+            <p className="text-xs opacity-60">{activeSubject.name} {activeFolder ? `> ${activeFolder}` : ''}</p>
+            <h2 className="font-display font-bold text-lg truncate">Index {activeTopic.serial_number}: {activeTopic.title}</h2>
           </div>
 
           {/* Split controls */}
@@ -218,69 +247,148 @@ export default function NotesPage() {
 
         {/* Workspace body */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Material sidebar */}
+          {/* Material sidebar with Folders */}
           <aside
-            className={`w-60 shrink-0 border-r overflow-y-auto ${
+            className={`w-64 shrink-0 border-r overflow-y-auto ${
               isDark ? 'border-[#7B694E]/30 bg-[#280B0F]' : 'border-[#F7C8D3]/40 bg-[#FFF5F6]'
             }`}
           >
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-bold opacity-60 uppercase tracking-wide">Materials</p>
+            <div className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold opacity-60 uppercase tracking-wide">Materials & Folders</p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setShowNewFolderInput(true)}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
+                    }`}
+                    title="Add folder"
+                  >
+                    <Plus size={14} />
+                  </button>
+                  <button
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
+                    }`}
+                    title="Upload file"
+                  >
+                    <Upload size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* New Folder Input form */}
+              {showNewFolderInput && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="Folder name"
+                    className={`w-full px-3 py-1.5 rounded-lg border text-xs focus:outline-none ${
+                      isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-white' : 'bg-white border-[#F7C8D3]'
+                    }`}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && newFolderName.trim()) {
+                        setCustomFolders([...customFolders, newFolderName.trim()]);
+                        setNewFolderName('');
+                        setShowNewFolderInput(false);
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (newFolderName.trim()) {
+                        setCustomFolders([...customFolders, newFolderName.trim()]);
+                        setNewFolderName('');
+                        setShowNewFolderInput(false);
+                      }
+                    }}
+                    className="px-2 py-1 bg-[#B46A72] text-white rounded-lg text-xs font-semibold"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+
+              {/* Folder list */}
+              <div className="space-y-1">
                 <button
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
+                  onClick={() => setActiveFolder(null)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
+                    activeFolder === null
+                      ? 'bg-[#B46A72] text-white'
+                      : isDark
+                      ? 'hover:bg-[#3B1319] text-[#C6B39A]'
+                      : 'hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
                   }`}
-                  title="Upload material"
                 >
-                  <Upload size={14} />
+                  <FolderOpen size={14} />
+                  <span>All Files</span>
                 </button>
+
+                {customFolders.map((folder) => (
+                  <button
+                    key={folder}
+                    onClick={() => setActiveFolder(folder)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
+                      activeFolder === folder
+                        ? 'bg-[#B46A72] text-white'
+                        : isDark
+                        ? 'hover:bg-[#3B1319] text-[#C6B39A]'
+                        : 'hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
+                    }`}
+                  >
+                    <Folder size={14} />
+                    <span className="truncate">{folder}</span>
+                  </button>
+                ))}
               </div>
 
               {/* Digital notes shortcut */}
-              <button
-                onClick={() => openInPane('notes', 0)}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl mb-2 text-xs font-semibold transition-colors text-left ${
-                  isDark
-                    ? 'bg-[#3B1319] hover:bg-[#7B694E]/30 text-[#C6B39A]'
-                    : 'bg-white hover:bg-[#F7C8D3]/20 text-[#B46A72] border border-[#F7C8D3]/40'
-                }`}
-              >
-                <FileText size={14} />
-                Digital Notes
-              </button>
+              <div className="pt-2 border-t border-inherit">
+                <button
+                  onClick={() => openInPane('notes', 0)}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl mb-2 text-xs font-semibold transition-colors text-left ${
+                    isDark
+                      ? 'bg-[#3B1319] hover:bg-[#7B694E]/30 text-[#C6B39A]'
+                      : 'bg-white hover:bg-[#F7C8D3]/20 text-[#B46A72] border border-[#F7C8D3]/40'
+                  }`}
+                >
+                  <FileText size={14} />
+                  Digital Notes
+                </button>
 
-              {/* Material list */}
-              <div className="space-y-1">
-                {materials.map((mat) => {
-                  const MatIcon = getMaterialIcon(mat.material_type);
-                  return (
-                    <button
-                      key={mat.id}
-                      onClick={() => {
-                        // Find first empty pane, or use pane 0
-                        const emptyIdx = openPanes.findIndex((p) => p === null);
-                        openInPane(mat, emptyIdx >= 0 ? emptyIdx : 0);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors text-left ${
-                        isDark
-                          ? 'hover:bg-[#3B1319] text-[#F7EFE6]'
-                          : 'hover:bg-[#F7C8D3]/20 text-[#2D3A47]'
-                      }`}
-                    >
-                      <MatIcon size={14} className="shrink-0 opacity-60" />
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium">{mat.title}</p>
-                        <p className="opacity-50 text-[10px]">
-                          {getMaterialLabel(mat.material_type)} · {formatFileSize(mat.file_size_bytes)}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-                {materials.length === 0 && (
-                  <p className="text-xs text-center opacity-40 py-4">No materials yet</p>
-                )}
+                {/* Material list */}
+                <div className="space-y-1">
+                  {materials
+                    .filter(() => true)
+                    .map((mat) => {
+                      const MatIcon = getMaterialIcon(mat.material_type);
+                      return (
+                        <button
+                          key={mat.id}
+                          onClick={() => {
+                            const emptyIdx = openPanes.findIndex((p) => p === null);
+                            openInPane(mat, emptyIdx >= 0 ? emptyIdx : 0);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors text-left ${
+                            isDark
+                              ? 'hover:bg-[#3B1319] text-[#F7EFE6]'
+                              : 'hover:bg-[#F7C8D3]/20 text-[#2D3A47]'
+                          }`}
+                        >
+                          <MatIcon size={14} className="shrink-0 opacity-60" />
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate font-medium">{mat.title}</p>
+                            <p className="opacity-50 text-[10px]">
+                              {getMaterialLabel(mat.material_type)} · {formatFileSize(mat.file_size_bytes)}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
             </div>
           </aside>
@@ -316,9 +424,10 @@ export default function NotesPage() {
                         <X size={14} className="opacity-60" />
                       </button>
                     </div>
-                    <div className="flex-1 p-4 overflow-y-auto">
-                      <p className="text-sm opacity-60 italic">
-                        Rich text editor will load here (Tiptap)
+                    <div className="flex-1 p-6 overflow-y-auto">
+                      <h3 className="text-lg font-bold mb-3">Topic Notes & Summary</h3>
+                      <p className="text-sm opacity-80 leading-relaxed">
+                        Write and edit your notes here. Supports rich formatting, bullet points, code snippets, and citations from your PDF/lecture materials.
                       </p>
                     </div>
                   </div>
@@ -372,7 +481,7 @@ export default function NotesPage() {
     );
   }
 
-  // ── Topics / Chapters View ─────────────────────
+  // ── Topics / Chapters View (with Serial Number Index) ─────────────────────
   if (activeSubject) {
     const SubjectIcon = getIconComponent(activeSubject.icon);
 
@@ -383,31 +492,51 @@ export default function NotesPage() {
         }`}
       >
         {/* Back + subject header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setActiveSubject(null);
+                setTopics([]);
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
+              }`}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
+              style={{ backgroundColor: activeSubject.color || '#B46A72' }}
+            >
+              <SubjectIcon size={20} />
+            </div>
+            <div>
+              <h1 className="font-display text-3xl font-bold">{activeSubject.name}</h1>
+              <p className="text-sm opacity-60">{topics.length} indexed chapters / topics</p>
+            </div>
+          </div>
+
           <button
-            onClick={() => {
-              setActiveSubject(null);
-              setTopics([]);
+            onClick={async () => {
+              const title = prompt('Enter new topic/chapter title:');
+              if (title) {
+                const newTopic = await api.createTopic(activeSubject.id, {
+                  serial_number: topics.length + 1,
+                  title,
+                  status: 'todo',
+                });
+                setTopics([...topics, newTopic]);
+              }
             }}
-            className={`p-2 rounded-lg transition-colors ${
-              isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
-            }`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
           >
-            <ArrowLeft size={18} />
+            <Plus size={16} />
+            Add Index Topic
           </button>
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
-            style={{ backgroundColor: activeSubject.color || '#B46A72' }}
-          >
-            <SubjectIcon size={20} />
-          </div>
-          <div>
-            <h1 className="font-display text-3xl font-bold">{activeSubject.name}</h1>
-            <p className="text-sm opacity-60">{topics.length} chapters / topics</p>
-          </div>
         </div>
 
-        {/* Topics list */}
+        {/* Topics Index list */}
         {topicsLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -429,7 +558,7 @@ export default function NotesPage() {
           >
             <BookOpen size={48} className="opacity-40 mb-4" />
             <p className="font-semibold mb-1">No topics yet</p>
-            <p className="text-sm opacity-60">Add your first chapter or topic</p>
+            <p className="text-sm opacity-60">Add your first indexed chapter</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -444,14 +573,14 @@ export default function NotesPage() {
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${
                     isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#B46A72]'
                   }`}
                 >
-                  {topic.serial_number}
+                  #{topic.serial_number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate">{topic.title}</h3>
+                  <h3 className="font-semibold text-base truncate">{topic.title}</h3>
                   <div className="flex items-center gap-3 mt-1 text-xs opacity-60">
                     <span>{topic.material_count ?? 0} materials</span>
                     {topic.status && (
@@ -463,7 +592,7 @@ export default function NotesPage() {
                 {topic.progress !== undefined && topic.progress > 0 && (
                   <div className="flex items-center gap-2 shrink-0">
                     <div
-                      className={`w-16 h-1.5 rounded-full overflow-hidden ${
+                      className={`w-20 h-1.5 rounded-full overflow-hidden ${
                         isDark ? 'bg-[#280B0F]' : 'bg-[#F7C8D3]/30'
                       }`}
                     >
@@ -472,7 +601,7 @@ export default function NotesPage() {
                         style={{ width: `${topic.progress}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-bold opacity-60">{topic.progress}%</span>
+                    <span className="text-[11px] font-bold opacity-60">{topic.progress}%</span>
                   </div>
                 )}
                 <ChevronRight
@@ -497,12 +626,15 @@ export default function NotesPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="font-display text-4xl font-bold mb-2">Study Notes</h1>
+          <h1 className="font-display text-4xl font-bold mb-2">Study Notes & Subjects</h1>
           <p className="text-sm opacity-70">
-            Select a subject to view and manage your notes
+            Click any subject to open its indexed chapters & materials
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all">
+        <button
+          onClick={() => setShowNewSubjectModal(true)}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
+        >
           <Plus size={18} />
           New Subject
         </button>
@@ -606,6 +738,19 @@ export default function NotesPage() {
           isDark={isDark}
           onOpen={openSubject}
           onIconClick={(id) => setIconPickerSubject(id)}
+        />
+      )}
+
+      {/* New Subject Modal */}
+      {showNewSubjectModal && (
+        <NewSubjectModal
+          isDark={isDark}
+          palette={SUBJECT_PALETTE}
+          onClose={() => setShowNewSubjectModal(false)}
+          onCreated={(newSub) => {
+            setSubjects([...subjects, newSub]);
+            setShowNewSubjectModal(false);
+          }}
         />
       )}
 
@@ -758,6 +903,129 @@ function SubjectTable({ subjects, isDark, onOpen, onIconClick }: SubjectTablePro
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ── NewSubjectModal ──────────────────────────────────────────
+
+interface NewSubjectModalProps {
+  isDark: boolean;
+  palette: typeof SUBJECT_PALETTE;
+  onClose: () => void;
+  onCreated: (subject: Subject) => void;
+}
+
+function NewSubjectModal({ isDark, palette, onClose, onCreated }: NewSubjectModalProps) {
+  const [name, setName] = useState('');
+  const [selectedColor, setSelectedColor] = useState(Object.values(palette)[0]);
+  const [selectedIcon, setSelectedIcon] = useState<string>('BookOpen');
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    const newSub = await api.createSubject({
+      name: name.trim(),
+      color: selectedColor,
+    });
+    // also update icon if custom
+    if (selectedIcon !== 'BookOpen') {
+      await api.updateSubject(newSub.id, { icon: selectedIcon });
+      newSub.icon = selectedIcon;
+    }
+    onCreated(newSub);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div
+        className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+          isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-bold text-lg">Create New Subject</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-black/5">
+            <X size={18} className="opacity-60" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase opacity-60 mb-2">Subject Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Artificial Intelligence"
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                isDark ? 'bg-[#280B0F] border-[#7B694E]/40 text-white' : 'bg-white border-[#F7C8D3]'
+              }`}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase opacity-60 mb-2">Color Preset</label>
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(palette).map(([key, hex]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedColor(hex)}
+                  className={`h-9 rounded-xl transition-all ${
+                    selectedColor === hex ? 'ring-2 ring-white scale-110' : 'hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: hex }}
+                  title={key}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase opacity-60 mb-2">Icon</label>
+            <div className="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
+              {ICON_OPTIONS.map((iconName) => {
+                const Icon = getIconComponent(iconName);
+                const isSelected = selectedIcon === iconName;
+                return (
+                  <button
+                    key={iconName}
+                    type="button"
+                    onClick={() => setSelectedIcon(iconName)}
+                    className={`p-2 rounded-xl transition-all ${
+                      isSelected
+                        ? 'bg-[#B46A72] text-white'
+                        : isDark
+                        ? 'hover:bg-[#7B694E]/30 text-[#C6B39A]'
+                        : 'hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
+                    }`}
+                  >
+                    <Icon size={18} className="mx-auto" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded-xl font-semibold text-sm ${
+              isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
+            }`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={!name.trim()}
+            className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50"
+          >
+            Create Subject
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

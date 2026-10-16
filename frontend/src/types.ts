@@ -39,6 +39,7 @@ export interface Topic {
   progress?: number;
   checklist?: ChecklistItem[];
   note?: string;
+  due_date?: string;
 }
 
 export type MaterialType = 'pdf' | 'ppt' | 'handwritten_image' | 'chatbot_note' | 'attachment';

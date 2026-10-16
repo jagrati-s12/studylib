@@ -1,16 +1,15 @@
-# Notes App
+# Personal Study Library & Notes App
 
-A modern, feature-rich note-taking application built with React, TypeScript, and Vite. Create, edit, and organize your notes with a beautiful rich text editor powered by Tiptap.
+A modern, feature-rich study library, notes, and task management application built with React, TypeScript, and Vite. Organize your subjects, indexed chapters, materials (PDFs, PPTs, handwritten notes, digital notes in folders), and manage todos with checklists and due dates across day, week, and month views.
 
 ## Features
 
-- **Rich Text Editor**: Full-featured editor with formatting options (bold, italic, underline, lists, and more)
-- **Modern UI**: Clean and intuitive interface built with React 19 and Tailwind CSS
-- **Resizable Panels**: Flexible layout with resizable sidebar and content areas
-- **Type-Safe**: Built entirely in TypeScript for better developer experience and fewer bugs
-- **Fast Development**: Powered by Vite for lightning-fast HMR and build times
-- **Client-Side Routing**: Smooth navigation with React Router
-- **State Management**: Efficient data fetching and caching with TanStack Query
+- **Enhanced Todo Management**: Create todos with interactive checklists and due dates, filterable by All, Day, Week, and Month views.
+- **Subject & Indexed Topic Drill-Down**: Custom subject color presets and Lucide icon picker, clickable subject cards with indexed chapters/topics (`#1`, `#2`, etc.).
+- **Nested Material Folders**: Organize study materials into custom folders (digital notes, PDFs, lecture notes, attachments) with multi-pane split viewing.
+- **Rich Text Editor**: Full-featured editor for note-taking and documentation.
+- **Modern UI & Dark Mode**: Clean interface built with Tailwind CSS with seamless dark/light theme support.
+- **Fast Development**: Powered by Vite and TypeScript for type safety and speed.
 
 ## Tech Stack
 
@@ -141,3 +140,5 @@ For issues or questions, please open an issue in the repository.
 ---
 
 Built with ❤️ using React and TypeScript
+
+

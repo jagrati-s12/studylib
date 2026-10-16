@@ -407,6 +407,7 @@ export const mockApi = {
       tags?: string[];
       checklist?: Topic['checklist'];
       note?: string;
+      due_date?: string;
     }
   ): Promise<Topic> {
     await delay(300);
@@ -424,6 +425,7 @@ export const mockApi = {
       progress: data.status === 'done' ? 100 : 0,
       checklist: data.checklist ?? [],
       note: data.note,
+      due_date: data.due_date,
     };
     if (!mockTopics[subjectId]) mockTopics[subjectId] = [];
     mockTopics[subjectId].push(topic);

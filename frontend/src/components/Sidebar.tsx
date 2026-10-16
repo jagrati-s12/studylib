@@ -82,7 +82,7 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
               MAIN
             </p>
           )}
-          <nav className="space-y-1">
+          <nav className={`space-y-1 ${collapsed ? 'flex flex-col items-center' : ''}`}>
             <NavItem
               to="/todo"
               icon={ListTodo}
@@ -162,10 +162,10 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate leading-tight text-inherit">
-                  Brooklyn Simmons
+                  jagrati sharma 
                 </p>
                 <p className="text-[11px] opacity-60 truncate">
-                  simmons@gamil.com
+                  tobegiven@gamil.com
                 </p>
               </div>
             )}
@@ -228,10 +228,10 @@ function NavItem({
             : isDark
             ? 'text-[#C6B39A]/80 hover:bg-[#3B1319]/50 hover:text-white'
             : 'text-[#2D3A47]/80 hover:bg-[#F7C8D3]/30 hover:text-[#2D3A47]'
-        } ${collapsed ? 'justify-center px-0' : ''}`
+        } ${collapsed ? 'justify-center px-2 w-12 h-12 mx-auto' : ''}`
       }
     >
-      <Icon size={18} className="shrink-0" />
+      <Icon size={20} className="shrink-0" />
       {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );
