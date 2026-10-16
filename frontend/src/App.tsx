@@ -7,6 +7,7 @@ import SchedulePage from '@/features/schedule/SchedulePage';
 import NotesPage from '@/features/notes/NotesPage';
 import SettingsPage from '@/features/settings/SettingsPage';
 import AIAssistantPage from '@/features/ai/AIStudyAssistantPage';
+import FlashcardsPage from '@/features/flashcards/FlashcardPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/dashboard" element={<Navigate to="/todo" replace />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/notes" element={<NotesPage />} />
+              <Route path="/flashcards" element={<FlashcardsPage />} />
               <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/todo" replace />} />

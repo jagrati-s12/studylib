@@ -3,6 +3,7 @@ import {
   ListTodo,
   Calendar,
   FileText,
+  Brain,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -101,6 +102,13 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
               to="/notes"
               icon={FileText}
               label="Notes"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
+              to="/flashcards"
+              icon={Brain}
+              label="Flashcards"
               collapsed={collapsed}
               isDark={isDark}
             />
