@@ -40,6 +40,10 @@ export interface Topic {
   checklist?: ChecklistItem[];
   note?: string;
   due_date?: string;
+  subject_id_ref?: string;
+  topic_id_ref?: string;
+  referenced_subject_name?: string;
+  referenced_topic_title?: string;
 }
 
 export type MaterialType = 'pdf' | 'ppt' | 'handwritten_image' | 'chatbot_note' | 'attachment';

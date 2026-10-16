@@ -6,6 +6,7 @@ import EnhancedTodoPage from '@/features/todo/EnhancedTodoPage';
 import SchedulePage from '@/features/schedule/SchedulePage';
 import NotesPage from '@/features/notes/NotesPage';
 import SettingsPage from '@/features/settings/SettingsPage';
+import AIAssistantPage from '@/features/ai/AIStudyAssistantPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ export default function App() {
               <Route path="/dashboard" element={<Navigate to="/todo" replace />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/notes" element={<NotesPage />} />
+              <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/todo" replace />} />
             </Route>

@@ -104,6 +104,13 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
               collapsed={collapsed}
               isDark={isDark}
             />
+            <NavItem
+              to="/ai-assistant"
+              icon={Sparkles}
+              label="AI Assistant"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
           </nav>
         </div>
 
