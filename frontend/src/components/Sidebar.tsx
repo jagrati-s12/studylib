@@ -32,18 +32,8 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
       {/* Brand & Badge Header */}
       <div className="flex items-center justify-between h-18 px-5 border-b border-inherit">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#F7C8D3] text-[#2D3A47] shrink-0 shadow-sm overflow-hidden p-1 border border-[#B46A72]/30">
-            <svg viewBox="0 0 512 512" className="w-full h-full object-contain">
-              <path d="M 160 360 C 160 300 200 240 280 230 C 360 220 410 270 410 330 C 410 380 370 395 320 390 C 270 385 200 395 160 360 Z" fill="#FFFFFF" stroke="#2D3A47" strokeWidth="20" strokeLinejoin="round" />
-              <polygon points="210,245 235,210 260,240" fill="#FFFFFF" stroke="#2D3A47" strokeWidth="18" strokeLinejoin="round" />
-              <polygon points="360,255 385,225 400,260" fill="#FFFFFF" stroke="#2D3A47" strokeWidth="18" strokeLinejoin="round" />
-              <ellipse cx="230" cy="315" rx="22" ry="14" fill="#F7C8D3" transform="rotate(-10 230 315)" />
-              <ellipse cx="258" cy="298" rx="6" ry="10" fill="#2D3A47" />
-              <ellipse cx="306" cy="298" rx="6" ry="10" fill="#2D3A47" />
-              <path d="M 268 310 Q 275 318 282 310 Q 289 318 296 310" stroke="#2D3A47" strokeWidth="12" fill="none" strokeLinecap="round" />
-              <path d="M 245 285 L 365 245 C 375 245 375 355 365 355 L 245 395 C 235 395 235 285 245 285 Z" fill="#8F9BB3" stroke="#2D3A47" strokeWidth="16" strokeLinejoin="round" />
-              <path d="M 305 305 C 305 298 315 293 320 300 C 325 293 335 298 335 305 C 335 315 320 325 320 325 C 320 325 305 315 305 305 Z" fill="#FF8DA1" />
-            </svg>
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white shrink-0 shadow-sm overflow-hidden border border-[#B46A72]/30">
+            <img src="/cat-logo.jpg" alt="Notie Cat Logo" className="w-full h-full object-cover" />
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0">
