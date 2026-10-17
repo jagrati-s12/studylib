@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <style>
+      .bg { fill: #FFF5F6; }
+      .cat-body { fill: #FFFFFF; stroke: #2D3A47; stroke-width: 14; stroke-linejoin: round; stroke-linecap: round; }
+      .pink { fill: #F7C8D3; }
+      .paw { fill: #FFFFFF; stroke: #2D3A47; stroke-width: 12; stroke-linejoin: round; }
+      .laptop-base { fill: #B9C2D0; stroke: #2D3A47; stroke-width: 12; stroke-linejoin: round; }
+      .laptop-screen { fill: #8F9BB3; stroke: #2D3A47; stroke-width: 12; stroke-linejoin: round; }
+      .mouse { fill: #8F9BB3; stroke: #2D3A47; stroke-width: 10; stroke-linejoin: round; }
+      .line { stroke: #2D3A47; stroke-width: 10; stroke-linecap: round; }
+    </style>
+  </defs>
+
+  <!-- Background Circle -->
+  <rect width="512" height="512" rx="110" fill="#FFF5F6" />
+
+  <!-- Mouse & Cable -->
+  <path d="M 170 370 Q 140 370 120 330 Q 100 290 120 270 Q 140 250 160 270 Q 180 290 160 310" class="line" fill="none" />
+  <ellipse cx="145" cy="335" rx="22" ry="32" class="mouse" transform="rotate(-25 145 335)" />
+  <line x1="140" y1="315" x2="140" y2="335" class="line" />
+
+  <!-- Cat Back Body / Lying Shape -->
+  <path d="M 160 360 C 160 300 200 240 280 230 C 360 220 410 270 410 330 C 410 380 370 395 320 390 C 270 385 200 395 160 360 Z" class="cat-body" />
+
+  <!-- Ears -->
+  <polygon points="210,245 235,210 260,240" class="cat-body" />
+  <polygon points="222,238 235,220 248,235" class="pink" />
+
+  <polygon points="360,255 385,225 400,260" class="cat-body" />
+  <polygon points="370,250 385,235 392,252" class="pink" />
+
+  <!-- Pink Cheeks -->
+  <ellipse cx="230" cy="315" rx="22" ry="14" class="pink" transform="rotate(-10 230 315)" />
+  <line x1="215" y1="310" x2="245" y2="310" stroke="#E09FA9" stroke-width="3" stroke-linecap="round" />
+  <line x1="218" y1="316" x2="242" y2="316" stroke="#E09FA9" stroke-width="3" stroke-linecap="round" />
+  <line x1="220" y1="322" x2="240" y2="322" stroke="#E09FA9" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Cute W-Mouth & Eyes -->
+  <path d="M 268 310 Q 275 318 282 310 Q 289 318 296 310" class="line" fill="none" />
+  <ellipse cx="258" cy="298" rx="5" ry="8" fill="#2D3A47" />
+  <ellipse cx="306" cy="298" rx="5" ry="8" fill="#2D3A47" />
+
+  <!-- ZZZ / Happy Note (Blue wiggle) -->
+  <path d="M 390 190 Q 410 180 400 205 Q 390 230 415 220" stroke="#6366F1" stroke-width="12" stroke-fill="none" stroke-linecap="round" fill="none" />
+
+  <!-- Laptop Base -->
+  <path d="M 230 375 L 350 335 L 430 415 L 210 435 Z" class="laptop-base" />
+  <ellipse cx="320" cy="385" rx="18" ry="10" fill="#A0ABB8" />
+
+  <!-- Laptop Screen -->
+  <path d="M 245 285 L 365 245 C 375 245 375 355 365 355 L 245 395 C 235 395 235 285 245 285 Z" class="laptop-screen" />
+  <!-- Heart on Screen -->
+  <path d="M 305 305 C 305 298 315 293 320 300 C 325 293 335 298 335 305 C 335 315 320 325 320 325 C 320 325 305 315 305 305 Z" fill="#FF8DA1" />
+
+  <!-- Paws on Keyboard -->
+  <ellipse cx="270" cy="380" rx="14" ry="10" class="paw" transform="rotate(-20 270 380)" />
+  <ellipse cx="340" cy="355" rx="14" ry="10" class="paw" transform="rotate(-15 340 355)" />
+</svg>

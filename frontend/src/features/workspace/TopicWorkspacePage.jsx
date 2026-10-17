@@ -13,6 +13,7 @@ import MaterialPane from './MaterialPane';
 import { Folder as FolderIcon, FolderPlus, Plus, FileText, Upload, X } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { useTheme } from '@/context/ThemeContext';
+import { saveStudyFile } from '@/lib/file-storage';
 
 export function TopicWorkspacePage() {
   const { subjectId, topicId } = useParams();
@@ -73,7 +74,7 @@ export function TopicWorkspacePage() {
           setFolders(foldersList);
           setDigitalNote(note);
 
-          // Always default to folder view (`showWorkspace = false`), showing the folder grid (Image #24) first when opening any topic index
+          // Always force folder view (`showWorkspace = false`) first when opening any topic index
           setLayout('single');
           setShowWorkspace(false);
           setPanelIds(['digital-notes', null, null, null]);
@@ -142,33 +143,81 @@ export function TopicWorkspacePage() {
     });
   };
 
-  const handleUpload = async (files) => {
-    if (!topicId || files.length === 0) return;
-    try {
-      const uploadedList = await Promise.all(
-        files.map(f =>
-          api.uploadMaterial(topicId, {
-            name: f.name,
-            size: f.size,
-            type: f.type,
-            url: URL.createObjectURL(f),
-            folderId: currentFolderId,
-          }),
-        ),
-      );
-      setMaterials(prev => [...prev, ...uploadedList]);
-      if (uploadedList.length > 0) {
-        if (layout === 'split' && (rightMaterialId === null || rightMaterialId === 'digital-notes')) {
-          handleRightChange(uploadedList[0].id);
-        } else if (leftMaterialId === null) {
-          handleLeftChange(uploadedList[0].id);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to upload material:', err);
-    }
-  };
+const handleUpload = async (files) => {
+  if (!topicId || !files?.length) return;
 
+  try {
+    const uploadedList = await Promise.all(
+      files.map(async (file) => {
+        // Save the actual file in IndexedDB.
+        const fileKey = await saveStudyFile(file);
+
+        // Store its persistent key in the existing material record.
+        return api.uploadMaterial(topicId, {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: `idb:${fileKey}`,
+          folderId: currentFolderId,
+        });
+      })
+    );
+
+    setMaterials((previous) => [...previous, ...uploadedList]);
+
+    const firstUploaded = uploadedList[0];
+
+    if (firstUploaded) {
+      // Open the workspace and display the first newly uploaded file.
+      setShowWorkspace(true);
+
+      setPanelIds((previous) => {
+        const next = [...previous];
+
+        const visibleCount = {
+          single: 1,
+          split: 2,
+          triple: 3,
+          quad: 4,
+        }[layout] || 1;
+
+        const emptyIndex = next
+          .slice(0, visibleCount)
+          .findIndex((id) => !id);
+
+        const targetIndex =
+          layout === 'single'
+            ? 0
+            : emptyIndex >= 0
+              ? emptyIndex
+              : 0;
+
+        next[targetIndex] = firstUploaded.id;
+
+        api.saveWorkspaceSettings(topicId, {
+          layout,
+          panels: next.map((item_id) => ({
+            item_id,
+            page: 1,
+            zoom: 100,
+          })),
+          left_material_id: next[0],
+          right_material_id: next[1],
+        });
+
+        return next;
+      });
+    }
+  } catch (error) {
+    console.error('Failed to upload material:', error);
+
+    window.alert(
+      error instanceof Error
+        ? error.message
+        : 'The file could not be saved. Please try again.'
+    );
+  }
+};
   const createFolder = async () => {
     if (!topicId) return;
     const name = window.prompt('Folder name');
@@ -209,9 +258,9 @@ export function TopicWorkspacePage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className={`flex flex-col h-full transition-colors ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-white text-[#2D3A47]'}`}>
       {/* Top Navigation & Breadcrumbs Bar */}
-      <div className="flex items-center justify-between px-6 py-2.5 border-b border-surface-200 bg-surface-50 text-sm">
+      <div className={`flex items-center justify-between px-6 py-2.5 border-b text-sm ${isDark ? 'bg-[#280B0F] border-[#3B1319] text-[#C6B39A]' : 'bg-surface-50 border-surface-200 text-surface-600'}`}>
         {/* Breadcrumb Trail */}
         <div className="flex items-center gap-2 text-surface-600 min-w-0">
           <Link
@@ -263,10 +312,10 @@ export function TopicWorkspacePage() {
         </div>
       </div>
 
-      {!showWorkspace ? <div className="flex-1 overflow-auto p-6 bg-surface-50">
+      {!showWorkspace ? <div className={`flex-1 overflow-auto p-6 transition-colors ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-surface-50 text-[#2D3A47]'}`}>
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-xl font-bold">{topic.title}</h1><p className="text-sm text-surface-500">{currentFolderId ? 'Folder contents' : 'Index library'} · {materials.filter(material => material.folder_id === currentFolderId).length} items</p></div><div className="flex gap-2"><button onClick={createFolder} className="rounded-lg border px-3 py-2 text-sm"><FolderPlus size={16} className="mr-1 inline"/>New folder</button><button onClick={()=>setShowUpload(true)} className="rounded-lg border px-3 py-2 text-sm"><Upload size={16} className="mr-1 inline"/>Add material</button></div></div>
-          {currentFolderId && <button onClick={()=>setCurrentFolderId(null)} className="mb-4 text-sm font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-200 bg-white hover:bg-surface-50">← Back to folder view</button>}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-xl font-bold">{topic.title}</h1><p className={`text-sm ${isDark ? 'text-[#C6B39A]/70' : 'text-surface-500'}`}>{currentFolderId ? 'Folder contents' : 'Index library'} · {materials.filter(material => material.folder_id === currentFolderId).length} items</p></div><div className="flex gap-2"><button onClick={createFolder} className={`rounded-lg border px-3 py-2 text-sm transition-colors ${isDark ? 'border-[#3B1319] bg-[#280B0F] hover:bg-[#3B1319] text-[#C6B39A]' : 'border-surface-200 bg-white hover:bg-surface-50 text-surface-700'} `}><FolderPlus size={16} className="mr-1 inline"/>New folder</button><button onClick={()=>setShowUpload(true)} className={`rounded-lg border px-3 py-2 text-sm transition-colors ${isDark ? 'border-[#3B1319] bg-[#280B0F] hover:bg-[#3B1319] text-[#C6B39A]' : 'border-surface-200 bg-white hover:bg-surface-50 text-surface-700'}`}><Upload size={16} className="mr-1 inline"/>Add material</button></div></div>
+          {currentFolderId && <button onClick={()=>setCurrentFolderId(null)} className={`mb-4 text-sm font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors ${isDark ? 'border-[#3B1319] bg-[#280B0F] hover:bg-[#3B1319] text-[#C6B39A]' : 'border-surface-200 bg-white hover:bg-surface-50 text-surface-700'}`}>← Back to folder view</button>}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {folders.filter(folder => folder.parent_folder_id === currentFolderId).map(folder => {
               const count = materials.filter(item => item.folder_id === folder.id).length;
@@ -397,7 +446,7 @@ export function TopicWorkspacePage() {
               <div className="text-xs opacity-60">Add custom folder for this index</div>
             </button>
           </div>
-        </div>{showUpload && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6"><button type="button" className="float-right" onClick={()=>setShowUpload(false)} aria-label="Close upload"><X size={18}/></button><h2 className="mb-1 text-lg font-semibold">Add material</h2><p className="mb-4 text-sm text-surface-500">It will be saved in the folder you are currently viewing.</p><FileUpload accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.mp4,.webm" onFilesSelected={files=>{handleUpload(files);setShowUpload(false)}}/></div></div>}</div> : <>
+        </div>{showUpload && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><div className={`w-full max-w-md rounded-2xl border p-6 shadow-xl ${isDark ? 'bg-[#280B0F] border-[#3B1319] text-[#C6B39A]' : 'bg-white border-surface-200 text-surface-950'}`}><button type="button" className="float-right" onClick={()=>setShowUpload(false)} aria-label="Close upload"><X size={18}/></button><h2 className="mb-1 text-lg font-semibold">Add material</h2><p className={`mb-4 text-sm ${isDark ? 'text-[#C6B39A]/70' : 'text-surface-500'}`}>It will be saved in the folder you are currently viewing.</p><FileUpload accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.mp4,.webm" onFilesSelected={files=>{handleUpload(files);setShowUpload(false)}}/></div></div>}</div> : <>
       {/* Workspace Action Toolbar */}
       <WorkspaceToolbar
         layout={layout}

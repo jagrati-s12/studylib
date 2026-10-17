@@ -4,12 +4,16 @@ import {
   Calendar,
   FileText,
   Brain,
+  Timer,
   Settings,
   ChevronLeft,
   ChevronRight,
   Sun,
   Moon,
   Sparkles,
+  GraduationCap,
+  BookMarked,
+  BarChart2,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -114,9 +118,37 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
               isDark={isDark}
             />
             <NavItem
+              to="/pomodoro"
+              icon={Timer}
+              label="Pomodoro"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
               to="/ai-assistant"
               icon={Sparkles}
               label="AI Assistant"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
+              to="/exam-prep"
+              icon={GraduationCap}
+              label="Exam Prep"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
+              to="/question-bank"
+              icon={BookMarked}
+              label="Question Bank"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
+              to="/analytics"
+              icon={BarChart2}
+              label="Analytics"
               collapsed={collapsed}
               isDark={isDark}
             />
