@@ -28,7 +28,7 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<Navigate to="/notes" replace />} />
-              <Route path="/todo" element={<NotesPage />} />
+              <Route path="/todo" element={<EnhancedTodoPage />} />
               <Route path="/dashboard" element={<Navigate to="/notes" replace />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/notes" element={<NotesPage />} />
