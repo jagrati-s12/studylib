@@ -73,18 +73,10 @@ export function TopicWorkspacePage() {
           setFolders(foldersList);
           setDigitalNote(note);
 
-          if (wsSettings && wsSettings.layout && wsSettings.layout !== 'single') {
-            setLayout(wsSettings.layout ?? 'single');
-            setLeftMaterialId(wsSettings.left_material_id ?? 'digital-notes');
-            setRightMaterialId(wsSettings.right_material_id ?? (mats.length > 0 ? mats[0].id : null));
-            setPanelIds(wsSettings.panels?.map(panel => panel.item_id) ?? ['digital-notes', null, null, null]);
-            setShowWorkspace(true);
-          } else {
-            // Default setup: start with folder view (`showWorkspace = false`), showing the folder grid (Image #24)
-            setLayout('single');
-            setShowWorkspace(false);
-            setPanelIds(['digital-notes', null, null, null]);
-          }
+          // Always default to folder view (`showWorkspace = false`), showing the folder grid (Image #24) first when opening any topic index
+          setLayout('single');
+          setShowWorkspace(false);
+          setPanelIds(['digital-notes', null, null, null]);
           setLoading(false);
         },
       )
