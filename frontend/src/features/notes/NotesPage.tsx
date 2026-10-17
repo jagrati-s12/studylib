@@ -768,6 +768,35 @@ export default function NotesPage() {
                     <span className="text-[11px] font-bold opacity-60">{topic.progress}%</span>
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const subTitle = prompt(`Enter subtopic title for #${topic.serial_number} ${topic.title}:`);
+                    if (!subTitle || !subTitle.trim()) return;
+                    try {
+                      const childTopics = topics.filter(t => t.parent_topic_id === topic.id);
+                      const nextSubSerial = topic.serial_number + (childTopics.length + 1) * 0.1;
+                      const created: Topic = await api.createTopic(activeSubject.id, {
+                        serial_number: Number(nextSubSerial.toFixed(1)),
+                        title: subTitle.trim(),
+                        parent_topic_id: topic.id,
+                        status: 'todo',
+                        tags: ['#subtopic'],
+                      });
+                      setTopics((prev) => [...prev, created]);
+                    } catch (err) {
+                      console.error('Failed to create subtopic:', err);
+                    }
+                  }}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                    isDark ? 'bg-[#7B694E]/30 text-[#C6B39A] hover:bg-[#7B694E]/50' : 'bg-[#F7C8D3]/30 text-[#B46A72] hover:bg-[#F7C8D3]/60'
+                  }`}
+                  title="Add subtopic"
+                >
+                  <Plus size={13} />
+                  <span>Subtopic</span>
+                </button>
                 <ChevronRight
                   size={16}
                   className="opacity-40 shrink-0 group-hover:translate-x-0.5 transition-transform"
