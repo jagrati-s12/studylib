@@ -210,6 +210,13 @@ export default function SubjectPage() {
           navigate(`/subjects/${subjectId}/topics/${topicId}`)
         }
         onDeleteTopic={handleDelete}
+        onAddSubtopic={(parentTopicId) => {
+          setFormError('');
+          setShowAddForm(true);
+          setIndexAction('sub');
+          setParentTopicId(parentTopicId);
+          setNewSerial(String(nextSerial));
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, ArrowUpDown, FileText, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
+import { Trash2, ArrowUpDown, FileText, ChevronDown, ChevronRight, FolderOpen, Plus } from 'lucide-react';
 import { formatRelativeDate } from '@/lib/utils';
 import type { Topic } from '@/types';
 
@@ -7,12 +7,13 @@ interface IndexTableProps {
   topics: Topic[];
   onTopicClick: (topicId: string) => void;
   onDeleteTopic: (topicId: string) => void;
+  onAddSubtopic: (parentTopicId: string) => void;
 }
 
 type SortField = 'serial_number' | 'title' | 'updated_at';
 type SortDirection = 'asc' | 'desc';
 
-export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTableProps) {
+export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic }: IndexTableProps) {
   const [sortField, setSortField] = useState<SortField>('serial_number');
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -122,7 +123,18 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTablePr
               <td className="px-4 py-3 text-surface-400 text-xs">
                 {formatRelativeDate(topic.updated_at)}
               </td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-4 py-3 text-right flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  title="Add subtopic"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onAddSubtopic(topic.id);
+                  }}
+                  className="invisible group-hover:visible p-1.5 rounded-lg text-surface-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
                 <button
                   type="button"
                   title="Delete topic"
