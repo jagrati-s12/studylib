@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Search,
   BookOpen,
@@ -99,6 +100,8 @@ type SplitCount = 1 | 2 | 3 | 4;
 
 export default function NotesPage() {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
+  const { subjectId: routeSubjectId, topicId: routeTopicId } = useParams<{ subjectId?: string; topicId?: string }>();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,20 +135,19 @@ export default function NotesPage() {
       setSubjects(data);
       setLoading(false);
 
-      // Check URL query parameters for deep linking (e.g. ?subjectId=...&topicId=...)
-      const params = new URLSearchParams(window.location.search);
-      const subjectId = params.get('subjectId');
-      const topicId = params.get('topicId');
-      if (subjectId) {
-        const targetSub = data.find((s) => s.id === subjectId) || data[0];
+      const targetSubId = routeSubjectId || new URLSearchParams(window.location.search).get('subjectId');
+      const targetTopicId = routeTopicId || new URLSearchParams(window.location.search).get('topicId');
+
+      if (targetSubId) {
+        const targetSub = data.find((s) => s.id === targetSubId || s.name.toLowerCase().includes(targetSubId.toLowerCase())) || data[0];
         if (targetSub) {
           setActiveSubject(targetSub);
           setTopicsLoading(true);
           const topicList = await api.getTopics(targetSub.id);
           setTopics(topicList);
           setTopicsLoading(false);
-          if (topicId) {
-            const targetTopic = topicList.find((t) => t.id === topicId);
+          if (targetTopicId) {
+            const targetTopic = topicList.find((t) => t.id === targetTopicId);
             if (targetTopic) {
               setActiveTopic(targetTopic);
               const mats = await api.getMaterials(targetTopic.id);
@@ -155,9 +157,12 @@ export default function NotesPage() {
             }
           }
         }
+      } else {
+        setActiveSubject(null);
+        setActiveTopic(null);
       }
     });
-  }, []);
+  }, [routeSubjectId, routeTopicId]);
 
   const filteredSubjects = useMemo(() => {
     if (!searchQuery) return subjects;
@@ -166,23 +171,13 @@ export default function NotesPage() {
   }, [subjects, searchQuery]);
 
   async function openSubject(subject: Subject) {
-    setActiveSubject(subject);
-    setTopicsLoading(true);
-    setActiveTopic(null);
-    setMaterials([]);
-    setActiveFolder(null);
-    const data = await api.getTopics(subject.id);
-    setTopics(data);
-    setTopicsLoading(false);
+    navigate(`/subjects/${subject.id}`);
   }
 
   async function openTopic(topic: Topic) {
-    setActiveTopic(topic);
-    const mats = await api.getMaterials(topic.id);
-    setMaterials(mats);
-    setOpenPanes([null, null]);
-    setSplitCount(2);
-    setActiveFolder(null);
+    if (activeSubject) {
+      navigate(`/subjects/${activeSubject.id}/topics/${topic.id}`);
+    }
   }
 
   function openInPane(item: Material | 'notes', paneIdx: number) {
@@ -523,8 +518,7 @@ export default function NotesPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                setActiveSubject(null);
-                setTopics([]);
+                navigate('/notes');
               }}
               className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
