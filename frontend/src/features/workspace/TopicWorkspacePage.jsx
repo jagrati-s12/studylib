@@ -272,8 +272,137 @@ export function TopicWorkspacePage() {
       {!showWorkspace ? <div className="flex-1 overflow-auto p-6 bg-surface-50">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-xl font-bold">{topic.title}</h1><p className="text-sm text-surface-500">{currentFolderId ? 'Folder contents' : 'Index library'} · {materials.filter(material => material.folder_id === currentFolderId).length} items</p></div><div className="flex gap-2"><button onClick={createFolder} className="rounded-lg border px-3 py-2 text-sm"><FolderPlus size={16} className="mr-1 inline"/>New folder</button><button onClick={()=>setShowUpload(true)} className="rounded-lg border px-3 py-2 text-sm"><Upload size={16} className="mr-1 inline"/>Add material</button></div></div>
-          {currentFolderId && <button onClick={()=>setCurrentFolderId(null)} className="mb-4 text-sm text-primary-600">← Back to index</button>}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{folders.filter(folder => folder.parent_folder_id === currentFolderId).map(folder => <button key={folder.id} onClick={()=>setCurrentFolderId(folder.id)} className="rounded-xl border border-surface-200 bg-white p-4 text-left hover:border-primary-300"><FolderIcon className="mb-3 text-amber-400" size={34}/><div className="truncate font-medium">{folder.name}</div><div className="text-xs text-surface-400">{materials.filter(item=>item.folder_id===folder.id).length} items</div></button>)}{materials.filter(material => material.folder_id === currentFolderId).map(material => <button key={material.id} onClick={()=>{setLayout('single');setPanelIds(previous=>[material.id,...previous.slice(1)]);setShowWorkspace(true)}} className="rounded-xl border border-surface-200 bg-white p-4 text-left hover:border-primary-300"><FileText size={30} className="mb-3 text-primary-400"/><div className="truncate font-medium">{material.title}</div><div className="text-xs text-surface-400">{material.material_type}</div></button>)}<button onClick={()=>{setLayout('single');setPanelIds(previous=>['digital-notes',...previous.slice(1)]);setShowWorkspace(true)}} className="rounded-xl border border-dashed border-surface-300 bg-white p-4 text-left hover:border-primary-300"><Plus size={30} className="mb-3 text-primary-400"/><div className="font-medium">Digital notes</div><div className="text-xs text-surface-400">Create or open notes</div></button></div>
+          {currentFolderId && <button onClick={()=>setCurrentFolderId(null)} className="mb-4 text-sm font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-200 bg-white hover:bg-surface-50">← Back to folder view</button>}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {folders.filter(folder => folder.parent_folder_id === currentFolderId).map(folder => {
+              const count = materials.filter(item => item.folder_id === folder.id).length;
+              return (
+                <button
+                  key={folder.id}
+                  onClick={() => setCurrentFolderId(folder.id)}
+                  className={`group relative rounded-2xl border p-5 text-left transition-all shadow-sm hover:shadow-md ${
+                    isDark
+                      ? 'bg-[#3B1319]/80 border-[#7B694E]/40 hover:border-primary-400 text-[#F7EFE6]'
+                      : 'bg-white border-surface-200 hover:border-primary-400 text-surface-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+                      style={{ backgroundColor: subject.color || '#B46A72' }}
+                    >
+                      <FolderIcon size={24} />
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-100 dark:bg-black/30 text-surface-600 dark:text-surface-300">
+                      {count} items
+                    </span>
+                  </div>
+                  <div className="font-display font-bold text-base truncate mb-1">{folder.name}</div>
+                  <div className="text-xs opacity-60">Click to browse folder</div>
+                </button>
+              );
+            })}
+
+            {/* If at root view, also show default category shortcuts (PPT, PDF, Notes, Handwritten, Other) styled with subject color */}
+            {!currentFolderId && ['PDFs', 'PPTs', 'Digital Notes', 'Handwritten Notes', 'Others'].map((category, idx) => {
+              const catCount = category === 'PDFs' ? materials.filter(m => m.material_type === 'pdf').length
+                : category === 'PPTs' ? materials.filter(m => m.material_type === 'ppt').length
+                : category === 'Digital Notes' ? 1
+                : category === 'Handwritten Notes' ? materials.filter(m => m.material_type === 'handwritten_image').length
+                : materials.filter(m => !['pdf', 'ppt', 'handwritten_image'].includes(m.material_type)).length;
+
+              return (
+                <button
+                  key={category}
+                  onClick={() => {
+                    if (category === 'Digital Notes') {
+                      setLayout('single');
+                      setPanelIds(previous => ['digital-notes', ...previous.slice(1)]);
+                      setShowWorkspace(true);
+                    } else {
+                      const matchedFolder = folders.find(f => f.name.toLowerCase() === category.toLowerCase());
+                      if (matchedFolder) setCurrentFolderId(matchedFolder.id);
+                    }
+                  }}
+                  className={`group relative rounded-2xl border p-5 text-left transition-all shadow-sm hover:shadow-md ${
+                    isDark
+                      ? 'bg-[#3B1319]/80 border-[#7B694E]/40 hover:border-primary-400 text-[#F7EFE6]'
+                      : 'bg-white border-surface-200 hover:border-primary-400 text-surface-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+                      style={{ backgroundColor: subject.color || '#B46A72' }}
+                    >
+                      <FolderIcon size={24} />
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-100 dark:bg-black/30 text-surface-600 dark:text-surface-300">
+                      {catCount} items
+                    </span>
+                  </div>
+                  <div className="font-display font-bold text-base truncate mb-1">{category}</div>
+                  <div className="text-xs opacity-60">Category folder</div>
+                </button>
+              );
+            })}
+
+            {materials.filter(material => material.folder_id === currentFolderId).map(material => {
+              const MatIcon = getMaterialIcon(material.material_type);
+              return (
+                <button
+                  key={material.id}
+                  onClick={() => {
+                    setLayout('single');
+                    setPanelIds(previous => [material.id, ...previous.slice(1)]);
+                    setShowWorkspace(true);
+                  }}
+                  className={`group relative rounded-2xl border p-5 text-left transition-all shadow-sm hover:shadow-md ${
+                    isDark
+                      ? 'bg-[#3B1319]/80 border-[#7B694E]/40 hover:border-primary-400 text-[#F7EFE6]'
+                      : 'bg-white border-surface-200 hover:border-primary-400 text-surface-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+                      style={{ backgroundColor: subject.color || '#B46A72' }}
+                    >
+                      <MatIcon size={24} />
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-100 dark:bg-black/30 text-surface-600 dark:text-surface-300">
+                      {getMaterialLabel(material.material_type)}
+                    </span>
+                  </div>
+                  <div className="font-display font-bold text-base truncate mb-1">{material.title}</div>
+                  <div className="text-xs opacity-60">{formatFileSize(material.file_size_bytes)}</div>
+                </button>
+              );
+            })}
+
+            <button
+              onClick={createFolder}
+              className={`group relative rounded-2xl border border-dashed p-5 text-left transition-all shadow-sm hover:shadow-md ${
+                isDark
+                  ? 'bg-[#3B1319]/40 border-[#7B694E]/60 hover:border-primary-400 text-[#C6B39A]'
+                  : 'bg-surface-50 border-surface-300 hover:border-primary-400 text-surface-700'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm opacity-80"
+                  style={{ backgroundColor: subject.color || '#B46A72' }}
+                >
+                  <FolderPlus size={24} />
+                </div>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-200/50 dark:bg-black/20">
+                  Custom
+                </span>
+              </div>
+              <div className="font-display font-bold text-base truncate mb-1">Create new folder</div>
+              <div className="text-xs opacity-60">Add custom folder for this index</div>
+            </button>
+          </div>
         </div>{showUpload && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6"><button type="button" className="float-right" onClick={()=>setShowUpload(false)} aria-label="Close upload"><X size={18}/></button><h2 className="mb-1 text-lg font-semibold">Add material</h2><p className="mb-4 text-sm text-surface-500">It will be saved in the folder you are currently viewing.</p><FileUpload accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.mp4,.webm" onFilesSelected={files=>{handleUpload(files);setShowUpload(false)}}/></div></div>}</div> : <>
       {/* Workspace Action Toolbar */}
       <WorkspaceToolbar
