@@ -665,13 +665,50 @@ export default function NotesPage() {
                   #{topic.serial_number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-base truncate">{topic.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-base truncate">{topic.title}</h3>
+                    {topic.topic_id_ref && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B46A72]/20 text-[#B46A72]">
+                        Subtopic
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 mt-1 text-xs opacity-60">
                     <span>{topic.material_count ?? 0} materials</span>
                     {topic.status && (
                       <span className="capitalize">{topic.status.replace('_', ' ')}</span>
                     )}
                   </div>
+                </div>
+
+                {/* Action buttons (Add Subtopic) */}
+                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={async () => {
+                      const subTitle = prompt(`Enter subtopic title under #${topic.serial_number} ${topic.title}:`);
+                      if (!subTitle || !activeSubject) return;
+                      try {
+                        const nextSerial = topics.length + 1;
+                        const created: Topic = await api.createTopic(activeSubject.id, {
+                          serial_number: nextSerial,
+                          title: subTitle.trim(),
+                          status: 'todo',
+                          tags: ['#subtopic'],
+                          topic_id_ref: topic.id,
+                          referenced_topic_title: topic.title,
+                        });
+                        setTopics((prev) => [...prev, created]);
+                      } catch (err) {
+                        console.error('Failed to create subtopic:', err);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                      isDark ? 'bg-[#7B694E]/30 text-[#C6B39A] hover:bg-[#7B694E]/50' : 'bg-[#F7C8D3]/40 text-[#2D3A47] hover:bg-[#F7C8D3]/60'
+                    }`}
+                    title="Add subtopic under this index"
+                  >
+                    + Add Subtopic
+                  </button>
                 </div>
                 {/* Progress */}
                 {topic.progress !== undefined && topic.progress > 0 && (
