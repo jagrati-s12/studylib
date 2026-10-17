@@ -125,7 +125,14 @@ export default function NotesPage() {
   const [newTopicTitle, setNewTopicTitle] = useState('');
 
   // Nested folders state inside Materials
-  const [customFolders, setCustomFolders] = useState<string[]>(['Chapter 1 Notes', 'Extra References', 'Problem Sets']);
+  const [customFolders, setCustomFolders] = useState<string[]>([
+    'PDFs',
+    'PPTs',
+    'Digital Notes',
+    'Handmade Notes',
+    'AI Notes',
+    'Others'
+  ]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
