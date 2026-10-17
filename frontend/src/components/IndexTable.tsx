@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, ArrowUpDown, FileText } from 'lucide-react';
+import { Trash2, ArrowUpDown, FileText, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 import { formatRelativeDate } from '@/lib/utils';
 import type { Topic } from '@/types';
 
@@ -15,6 +15,7 @@ type SortDirection = 'asc' | 'desc';
 export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTableProps) {
   const [sortField, setSortField] = useState<SortField>('serial_number');
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   function handleSort(field: SortField) {
     if (field === sortField) {
@@ -25,7 +26,7 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTablePr
     }
   }
 
-  const sorted = [...topics].sort((a, b) => {
+  const sorted = [...topics].filter(topic => !topic.parent_topic_id).sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortField) {
       case 'serial_number':
@@ -38,6 +39,7 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTablePr
         return 0;
     }
   });
+  const childrenOf = (parentId: string) => topics.filter(topic => topic.parent_topic_id === parentId).sort((a, b) => a.serial_number - b.serial_number);
 
   if (topics.length === 0) {
     return (
@@ -88,14 +90,26 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTablePr
           </tr>
         </thead>
         <tbody className="divide-y divide-surface-100">
-          {sorted.map(topic => (
-            <tr
+          {sorted.flatMap(topic => {
+            const children = childrenOf(topic.id);
+            const hasChildren = children.length > 0;
+            const isOpen = expanded.has(topic.id);
+            const row = <tr
               key={topic.id}
-              onClick={() => onTopicClick(topic.id)}
+              onClick={() => {
+                if (!hasChildren) { onTopicClick(topic.id); return; }
+                setExpanded(previous => {
+                  const next = new Set(previous);
+                  if (next.has(topic.id)) next.delete(topic.id);
+                  else next.add(topic.id);
+                  return next;
+                });
+              }}
               className="group cursor-pointer hover:bg-primary-50/50 transition-colors"
             >
               <td className="px-4 py-3">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 text-sm font-semibold text-surface-700 group-hover:bg-primary-100 group-hover:text-primary-700 transition-colors">
+                <span className="inline-flex items-center justify-center gap-1 w-12 h-8 rounded-lg bg-surface-100 text-sm font-semibold text-surface-700 group-hover:bg-primary-100 group-hover:text-primary-700 transition-colors">
+                  {hasChildren ? (isOpen ? <ChevronDown size={15}/> : <ChevronRight size={15}/>) : null}
                   {topic.serial_number}
                 </span>
               </td>
@@ -121,8 +135,10 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic }: IndexTablePr
                   <Trash2 className="w-4 h-4" />
                 </button>
               </td>
-            </tr>
-          ))}
+            </tr>;
+            const childRows = isOpen ? children.map(child => <tr key={child.id} onClick={() => onTopicClick(child.id)} className="cursor-pointer bg-surface-50/70 hover:bg-primary-50 transition-colors"><td className="px-4 py-2.5"><span className="ml-5 inline-flex items-center gap-1 text-xs text-surface-500"><ChevronRight size={14}/> {child.serial_number}</span></td><td className="px-4 py-2.5 font-medium text-surface-700"><span className="inline-flex items-center gap-2"><FolderOpen size={15} className="text-primary-500"/> {child.title}</span></td><td className="px-4 py-2.5 text-center text-surface-500">{child.material_count ?? 0}</td><td className="px-4 py-2.5 text-xs text-surface-400">Sub-index</td><td className="px-4 py-2.5 text-right"><button type="button" onClick={event => { event.stopPropagation(); onDeleteTopic(child.id); }} className="p-1 text-surface-400 hover:text-red-500" aria-label={`Delete ${child.title}`}><Trash2 size={14}/></button></td></tr>) : [];
+            return [row, ...childRows];
+          })}
         </tbody>
       </table>
     </div>

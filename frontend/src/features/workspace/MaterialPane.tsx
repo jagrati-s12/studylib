@@ -1,4 +1,4 @@
-import { FileText, Image, StickyNote } from 'lucide-react';
+import { FileText, StickyNote, ExternalLink, Download } from 'lucide-react';
 import type { Material, DigitalNote } from '@/types';
 import DigitalNotesEditor from '@/editors/DigitalNotesEditor';
 
@@ -48,43 +48,21 @@ export default function MaterialPane({
     );
   }
 
-  // PDF placeholder
+  const fallback = (message: string) => <div className="h-full flex flex-col items-center justify-center gap-4 p-6 text-center"><FileText size={48} className="text-surface-400"/><h3 className="font-semibold text-surface-700">{material.title}</h3><p className="text-sm text-surface-500">{message}</p>{material.url ? <div className="flex gap-2"><a href={material.url} target="_blank" rel="noreferrer" className="rounded border px-3 py-2 text-sm"><ExternalLink size={14} className="inline"/> Open</a><a href={material.url} download={material.title} className="rounded border px-3 py-2 text-sm"><Download size={14} className="inline"/> Download</a></div> : <p className="text-xs text-amber-600">This sample item has metadata only; upload the source file to preview it.</p>}</div>;
+
+  // Browser-native PDF reader for readable uploaded object URLs.
   if (material.material_type === 'pdf') {
-    return (
-      <div className="h-full flex flex-col items-center justify-center gap-4 p-6">
-        <div className="w-full max-w-lg border-2 border-dashed border-surface-300 rounded-xl p-10 flex flex-col items-center gap-4 bg-surface-50">
-          <FileText size={56} className="text-primary-400" strokeWidth={1.5} />
-          <h3 className="text-lg font-semibold text-surface-700">{material.title}</h3>
-          {material.page_count && (
-            <p className="text-sm text-surface-500">{material.page_count} pages</p>
-          )}
-          <p className="text-xs text-surface-400 mt-2">PDF viewer will render here</p>
-        </div>
-      </div>
-    );
+    return material.url ? <iframe title={material.title} src={material.url} className="h-full w-full border-0" /> : fallback('A readable PDF file is not available for this sample material.');
   }
 
   // Handwritten image placeholder
   if (material.material_type === 'handwritten_image') {
-    return (
-      <div className="h-full flex flex-col items-center justify-center gap-4 p-6">
-        <div className="w-full max-w-lg border-2 border-dashed border-surface-300 rounded-xl p-10 flex flex-col items-center gap-4 bg-surface-50">
-          <Image size={56} className="text-teal-400" strokeWidth={1.5} />
-          <h3 className="text-lg font-semibold text-surface-700">{material.title}</h3>
-          <p className="text-xs text-surface-400 mt-2">Image viewer will render here</p>
-        </div>
-      </div>
-    );
+    return material.url ? <div className="h-full overflow-auto bg-surface-100 p-4"><img src={material.url} alt={material.title} className="mx-auto max-w-full" /></div> : fallback('A readable image file is not available for this sample material.');
   }
 
+  if (material.material_type === 'video') return material.url ? <video controls className="h-full w-full bg-black" src={material.url}>Your browser cannot play this video.</video> : fallback('Upload the video again to play it in this prototype.');
+  if (material.material_type === 'ppt') return fallback('PPT/PPTX cannot be rendered natively by this browser. Use Open or Download.');
+
   // Generic attachment fallback
-  return (
-    <div className="h-full flex flex-col items-center justify-center gap-4 p-6">
-      <div className="w-full max-w-lg border-2 border-dashed border-surface-300 rounded-xl p-10 flex flex-col items-center gap-4 bg-surface-50">
-        <FileText size={56} className="text-surface-400" strokeWidth={1.5} />
-        <h3 className="text-lg font-semibold text-surface-700">{material.title}</h3>
-        <p className="text-xs text-surface-400 mt-2">Preview not available</p>
-      </div>
-    </div>
-  );
+  return fallback('Preview is not available for this file type.');
 }

@@ -6,6 +6,7 @@ import type {
   Material,
   DigitalNote,
   WorkspaceSettings,
+  Folder,
 } from '@/types';
 
 export const mockSubjects: Subject[] = [
@@ -344,6 +345,33 @@ export const mockWorkspaceSettings: Record<string, WorkspaceSettings> = {
   },
 };
 
+export const mockFolders: Record<string, Folder[]> = {};
+const STORAGE_KEY = 'studylib-prototype-v2';
+const defaultFolders = (topicId: string): Folder[] => ['PDFs', 'PPTs', 'Digital Notes', 'Handwritten Notes', 'AI Notes', 'Others'].map((name, index) => ({
+  id: `default-${topicId}-${index}`,
+  topic_id: topicId,
+  name,
+  parent_folder_id: null,
+  kind: 'default',
+  created_at: new Date(0).toISOString(),
+}));
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ subjects: mockSubjects, topics: mockTopics, materials: mockMaterials, notes: mockDigitalNotes, workspaces: mockWorkspaceSettings, folders: mockFolders })); } catch { /* Browser storage is best-effort for this prototype. */ }
+}
+function hydrate() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') as Record<string, unknown> | null;
+    if (!saved) return;
+    if (Array.isArray(saved.subjects)) mockSubjects.splice(0, mockSubjects.length, ...saved.subjects as Subject[]);
+    if (saved.topics && typeof saved.topics === 'object') Object.assign(mockTopics, saved.topics);
+    if (saved.materials && typeof saved.materials === 'object') Object.assign(mockMaterials, saved.materials);
+    if (saved.notes && typeof saved.notes === 'object') Object.assign(mockDigitalNotes, saved.notes);
+    if (saved.workspaces && typeof saved.workspaces === 'object') Object.assign(mockWorkspaceSettings, saved.workspaces);
+    if (saved.folders && typeof saved.folders === 'object') Object.assign(mockFolders, saved.folders);
+  } catch { /* Ignore corrupted or older saved prototype data. */ }
+}
+hydrate();
+
 // Simulated API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -371,6 +399,7 @@ export const mockApi = {
       updated_at: new Date().toISOString(),
     };
     mockSubjects.push(subject);
+    persist();
     return subject;
   },
 
@@ -379,6 +408,7 @@ export const mockApi = {
     const idx = mockSubjects.findIndex(s => s.id === id);
     if (idx === -1) throw new Error('Subject not found');
     mockSubjects[idx] = { ...mockSubjects[idx], ...data };
+    persist();
     return mockSubjects[idx];
   },
 
@@ -386,6 +416,7 @@ export const mockApi = {
     await delay(300);
     const idx = mockSubjects.findIndex(s => s.id === id);
     if (idx !== -1) mockSubjects.splice(idx, 1);
+    persist();
   },
 
   // Topics
@@ -417,6 +448,7 @@ export const mockApi = {
     data: {
       serial_number: number;
       title: string;
+      parent_topic_id?: string | null;
       status?: Topic['status'];
       tags?: string[];
       checklist?: Topic['checklist'];
@@ -430,6 +462,7 @@ export const mockApi = {
   ): Promise<Topic> {
     await delay(300);
     const topics = mockTopics[subjectId] ?? [];
+    if (topics.some(topic => topic.serial_number === data.serial_number)) throw new Error('That index number already exists in this subject.');
     const topic: Topic = {
       id: `top-${Date.now()}`,
       subject_id: subjectId,
@@ -448,9 +481,11 @@ export const mockApi = {
       topic_id_ref: data.topic_id_ref,
       referenced_subject_name: data.referenced_subject_name,
       referenced_topic_title: data.referenced_topic_title,
+      parent_topic_id: data.parent_topic_id ?? null,
     };
     if (!mockTopics[subjectId]) mockTopics[subjectId] = [];
     mockTopics[subjectId].push(topic);
+    persist();
     return topic;
   },
 
@@ -464,9 +499,11 @@ export const mockApi = {
           ...data,
           updated_at: new Date().toISOString(),
         };
+        persist();
         return mockTopics[key][idx];
       }
     }
+    persist();
     throw new Error('Topic not found');
   },
 
@@ -479,6 +516,7 @@ export const mockApi = {
         break;
       }
     }
+    persist();
   },
 
   // Materials
@@ -487,13 +525,17 @@ export const mockApi = {
     return mockMaterials[topicId] ?? [];
   },
 
-  async uploadMaterial(topicId: string, file: { name: string; size: number; type: string }): Promise<Material> {
+  async uploadMaterial(topicId: string, file: { name: string; size: number; type: string; url?: string; folderId?: string | null }): Promise<Material> {
     await delay(300);
-    const isPdf = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const isPdf = file.type.includes('pdf') || extension === 'pdf';
+    const isPpt = file.type.includes('presentation') || ['ppt', 'pptx'].includes(extension);
+    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp'].includes(extension);
+    const isVideo = file.type.startsWith('video/') || ['mp4', 'webm'].includes(extension);
     const newMaterial: Material = {
       id: `mat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       topic_id: topicId,
-      material_type: isPdf ? 'pdf' : 'handwritten_image',
+      material_type: isPdf ? 'pdf' : isPpt ? 'ppt' : isImage ? 'handwritten_image' : isVideo ? 'video' : 'attachment',
       title: file.name,
       storage_key: `users/user-1/topics/${topicId}/${file.name}`,
       mime_type: file.type || (isPdf ? 'application/pdf' : 'image/jpeg'),
@@ -501,11 +543,14 @@ export const mockApi = {
       page_count: isPdf ? 1 : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      folder_id: file.folderId ?? null,
+      url: file.url ?? null,
     };
     if (!mockMaterials[topicId]) {
       mockMaterials[topicId] = [];
     }
     mockMaterials[topicId].push(newMaterial);
+    persist();
     return newMaterial;
   },
 
@@ -515,16 +560,44 @@ export const mockApi = {
     return mockDigitalNotes[topicId] ?? null;
   },
 
-  async saveDigitalNote(topicId: string, content: Record<string, unknown>): Promise<DigitalNote> {
+  async getDigitalNotes(topicId: string): Promise<DigitalNote[]> {
+    await delay(100);
+    const note = mockDigitalNotes[topicId];
+    return note ? [note] : [];
+  },
+
+  async saveDigitalNote(topicId: string, content: Record<string, unknown>, data?: { id?: string; title?: string; folderId?: string | null }): Promise<DigitalNote> {
     await delay(300);
     const note: DigitalNote = {
-      id: mockDigitalNotes[topicId]?.id ?? `note-${Date.now()}`,
+      id: data?.id ?? mockDigitalNotes[topicId]?.id ?? `note-${Date.now()}`,
       topic_id: topicId,
       content,
       updated_at: new Date().toISOString(),
+      title: data?.title ?? mockDigitalNotes[topicId]?.title ?? 'Digital Notes',
+      folder_id: data?.folderId ?? mockDigitalNotes[topicId]?.folder_id ?? null,
     };
     mockDigitalNotes[topicId] = note;
+    persist();
     return note;
+  },
+
+  async getFolders(topicId: string): Promise<Folder[]> {
+    await delay(100);
+    if (!mockFolders[topicId]) { mockFolders[topicId] = defaultFolders(topicId); persist(); }
+    else {
+      const existing = new Set(mockFolders[topicId].filter(folder => folder.kind === 'default').map(folder => folder.name));
+      const missing = defaultFolders(topicId).filter(folder => !existing.has(folder.name));
+      if (missing.length) { mockFolders[topicId].push(...missing); persist(); }
+    }
+    return mockFolders[topicId];
+  },
+
+  async createFolder(topicId: string, name: string, parentFolderId: string | null = null): Promise<Folder> {
+    await delay(100);
+    const folders = mockFolders[topicId] ?? (mockFolders[topicId] = defaultFolders(topicId));
+    if (parentFolderId && !folders.some(folder => folder.id === parentFolderId)) throw new Error('Parent folder is outside this index.');
+    const folder: Folder = { id: `folder-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, topic_id: topicId, name: name.trim(), parent_folder_id: parentFolderId, kind: 'custom', created_at: new Date().toISOString() };
+    folders.push(folder); persist(); return folder;
   },
 
   // Workspace
@@ -555,6 +628,7 @@ export const mockApi = {
       ...settings,
     };
     mockWorkspaceSettings[topicId] = ws;
+    persist();
     return ws;
   },
 

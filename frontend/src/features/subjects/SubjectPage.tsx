@@ -20,6 +20,9 @@ export default function SubjectPage() {
   const [newSerial, setNewSerial] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [indexAction, setIndexAction] = useState<'new' | 'sub'>('new');
+  const [parentTopicId, setParentTopicId] = useState('');
   const [importNotice, setImportNotice] = useState(false);
 
   useEffect(() => {
@@ -35,20 +38,22 @@ export default function SubjectPage() {
   }, [subjectId]);
 
   async function handleAddTopic() {
-    if (!subjectId || !newTitle.trim()) return;
+    if (!subjectId || !newTitle.trim()) { setFormError('A title is required.'); return; }
     const serial = parseInt(newSerial, 10);
-    if (isNaN(serial) || serial < 1) return;
+    if (isNaN(serial) || serial < 1) { setFormError('Use an index number of 1 or greater.'); return; }
+    if (topics.some(topic => topic.serial_number === serial)) { setFormError('That index number already exists in this subject.'); return; }
     setCreating(true);
     try {
       const topic = await api.createTopic(subjectId, {
         serial_number: serial,
         title: newTitle.trim(),
+        parent_topic_id: indexAction === 'sub' ? parentTopicId : null,
       });
       setTopics((prev) => [...prev, topic]);
       setNewSerial('');
       setNewTitle('');
       setShowAddForm(false);
-    } finally {
+    } catch (error) { setFormError(error instanceof Error ? error.message : 'Could not create index.'); } finally {
       setCreating(false);
     }
   }
@@ -121,13 +126,14 @@ export default function SubjectPage() {
           </button>
           <button
             onClick={() => {
-              setShowAddForm(true);
+              setFormError(''); setShowAddForm(true);
+              setIndexAction('new'); setParentTopicId('');
               setNewSerial(String(nextSerial));
             }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
           >
             <Plus size={16} />
-            Add Topic
+            Add Index
           </button>
         </div>
       </div>
@@ -140,10 +146,17 @@ export default function SubjectPage() {
         </div>
       )}
 
-      {/* Add topic inline form */}
+      {/* Add topic modal: keeps the current subject route/context intact. */}
       {showAddForm && (
-        <div className="rounded-xl border border-primary-200 bg-primary-50/30 p-4">
-          <h3 className="text-sm font-semibold mb-3">New Topic</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="add-index-title" onMouseDown={() => !creating && setShowAddForm(false)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onMouseDown={event => event.stopPropagation()}>
+          <h3 id="add-index-title" className="text-lg font-semibold mb-1">Manage indexes for {subject.name}</h3>
+          <p className="mb-4 text-sm text-surface-500">Create a root index, or create a sub-index inside an existing index.</p>
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-surface-100 p-1">
+            <button type="button" onClick={() => { setIndexAction('new'); setFormError(''); }} className={`rounded-md px-3 py-2 text-sm font-medium ${indexAction === 'new' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}>New index</button>
+            <button type="button" onClick={() => { setIndexAction('sub'); setFormError(''); }} className={`rounded-md px-3 py-2 text-sm font-medium ${indexAction === 'sub' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}>Add sub-index</button>
+          </div>
+          {indexAction === 'sub' && <label className="mb-4 block text-sm font-medium text-surface-700">Parent index<select value={parentTopicId} onChange={event => { setParentTopicId(event.target.value); setFormError(''); }} className="mt-1.5 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm"><option value="">Choose an index</option>{topics.filter(topic => !topic.parent_topic_id).map(topic => <option key={topic.id} value={topic.id}>#{topic.serial_number} — {topic.title}</option>)}</select></label>}
           <div className="flex items-end gap-3">
             <div className="w-24">
               <label className="block text-xs font-medium text-surface-500 mb-1">
@@ -153,7 +166,7 @@ export default function SubjectPage() {
                 type="number"
                 min={1}
                 value={newSerial}
-                onChange={(e) => setNewSerial(e.target.value)}
+                onChange={(e) => { setNewSerial(e.target.value); setFormError(''); }}
                 className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none"
               />
             </div>
@@ -164,8 +177,8 @@ export default function SubjectPage() {
               <input
                 type="text"
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
+                onChange={(e) => { setNewTitle(e.target.value); setFormError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddTopic(); if (e.key === 'Escape') setShowAddForm(false); }}
                 placeholder="e.g. Introduction to Data Mining"
                 autoFocus
                 className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none"
@@ -173,17 +186,19 @@ export default function SubjectPage() {
             </div>
             <button
               onClick={handleAddTopic}
-              disabled={!newTitle.trim() || creating}
+              disabled={!newTitle.trim() || creating || (indexAction === 'sub' && !parentTopicId)}
               className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
             >
               {creating ? 'Adding…' : 'Add'}
             </button>
             <button
-              onClick={() => setShowAddForm(false)}
+              onClick={() => setShowAddForm(false)} disabled={creating}
               className="rounded-lg px-3 py-2 text-sm font-medium text-surface-500 hover:bg-surface-100 transition-colors"
             >
               Cancel
             </button>
+          </div>
+          {formError && <p className="mt-3 text-sm text-red-600" role="alert">{formError}</p>}
           </div>
         </div>
       )}

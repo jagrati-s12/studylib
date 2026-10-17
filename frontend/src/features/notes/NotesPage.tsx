@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Search,
   BookOpen,
@@ -100,8 +99,6 @@ type SplitCount = 1 | 2 | 3 | 4;
 
 export default function NotesPage() {
   const { isDark } = useTheme();
-  const navigate = useNavigate();
-  const { subjectId: routeSubjectId, topicId: routeTopicId } = useParams<{ subjectId?: string; topicId?: string }>();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,6 +114,14 @@ export default function NotesPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [splitCount, setSplitCount] = useState<SplitCount>(2);
   const [openPanes, setOpenPanes] = useState<(Material | 'notes' | null)[]>([null, null]);
+  const [filePickerPane, setFilePickerPane] = useState<number | null>(null);
+  const [pickerSubjectId, setPickerSubjectId] = useState('');
+  const [pickerTopics, setPickerTopics] = useState<Topic[]>([]);
+  const [pickerTopicId, setPickerTopicId] = useState('');
+  const [pickerMaterials, setPickerMaterials] = useState<Material[]>([]);
+  const [pickerFolder, setPickerFolder] = useState('All files');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadTargetPane, setUploadTargetPane] = useState<number | null>(null);
 
   // Icon picker state & New Subject Modal & New Topic Modal
   const [iconPickerSubject, setIconPickerSubject] = useState<string | null>(null);
@@ -125,14 +130,7 @@ export default function NotesPage() {
   const [newTopicTitle, setNewTopicTitle] = useState('');
 
   // Nested folders state inside Materials
-  const [customFolders, setCustomFolders] = useState<string[]>([
-    'PDFs',
-    'PPTs',
-    'Digital Notes',
-    'Handmade Notes',
-    'AI Notes',
-    'Others'
-  ]);
+  const [customFolders, setCustomFolders] = useState<string[]>(['Chapter 1 Notes', 'Extra References', 'Problem Sets']);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -142,34 +140,32 @@ export default function NotesPage() {
       setSubjects(data);
       setLoading(false);
 
-      const targetSubId = routeSubjectId || new URLSearchParams(window.location.search).get('subjectId');
-      const targetTopicId = routeTopicId || new URLSearchParams(window.location.search).get('topicId');
-
-      if (targetSubId) {
-        const targetSub = data.find((s) => s.id === targetSubId || s.name.toLowerCase().includes(targetSubId.toLowerCase())) || data[0];
+      // Check URL query parameters for deep linking (e.g. ?subjectId=...&topicId=...)
+      const params = new URLSearchParams(window.location.search);
+      const subjectId = params.get('subjectId');
+      const topicId = params.get('topicId');
+      if (subjectId) {
+        const targetSub = data.find((s) => s.id === subjectId) || data[0];
         if (targetSub) {
           setActiveSubject(targetSub);
           setTopicsLoading(true);
           const topicList = await api.getTopics(targetSub.id);
           setTopics(topicList);
           setTopicsLoading(false);
-          if (targetTopicId) {
-            const targetTopic = topicList.find((t) => t.id === targetTopicId);
+          if (topicId) {
+            const targetTopic = topicList.find((t) => t.id === topicId);
             if (targetTopic) {
               setActiveTopic(targetTopic);
               const mats = await api.getMaterials(targetTopic.id);
               setMaterials(mats);
               setOpenPanes([null, null]);
-              setSplitCount(2);
+              setSplitCount(1);
             }
           }
         }
-      } else {
-        setActiveSubject(null);
-        setActiveTopic(null);
       }
     });
-  }, [routeSubjectId, routeTopicId]);
+  }, []);
 
   const filteredSubjects = useMemo(() => {
     if (!searchQuery) return subjects;
@@ -178,13 +174,23 @@ export default function NotesPage() {
   }, [subjects, searchQuery]);
 
   async function openSubject(subject: Subject) {
-    navigate(`/subjects/${subject.id}`);
+    setActiveSubject(subject);
+    setTopicsLoading(true);
+    setActiveTopic(null);
+    setMaterials([]);
+    setActiveFolder(null);
+    const data = await api.getTopics(subject.id);
+    setTopics(data);
+    setTopicsLoading(false);
   }
 
   async function openTopic(topic: Topic) {
-    if (activeSubject) {
-      navigate(`/subjects/${activeSubject.id}/topics/${topic.id}`);
-    }
+    setActiveTopic(topic);
+    const mats = await api.getMaterials(topic.id);
+    setMaterials(mats);
+    setOpenPanes([null, null]);
+    setSplitCount(1);
+    setActiveFolder(null);
   }
 
   function openInPane(item: Material | 'notes', paneIdx: number) {
@@ -204,6 +210,34 @@ export default function NotesPage() {
     });
   }
 
+  async function choosePickerSubject(id: string) {
+    setPickerSubjectId(id); setPickerTopicId(''); setPickerMaterials([]); setPickerFolder('All files');
+    setPickerTopics(id ? await api.getTopics(id) : []);
+  }
+
+  async function choosePickerIndex(id: string) {
+    setPickerTopicId(id); setPickerFolder('All files');
+    setPickerMaterials(id ? await api.getMaterials(id) : []);
+  }
+
+  function openFilePicker(paneIndex: number) {
+    setFilePickerPane(paneIndex);
+    setPickerSubjectId(activeSubject?.id ?? '');
+    setPickerTopics(topics);
+    setPickerTopicId(activeTopic?.id ?? '');
+    setPickerMaterials(materials);
+    setPickerFolder('All files');
+  }
+
+  async function uploadIntoPane(files: FileList | null) {
+    if (!files?.length || !activeTopic || uploadTargetPane === null) return;
+    const file = files[0];
+    const material = await api.uploadMaterial(activeTopic.id, { name: file.name, size: file.size, type: file.type, url: URL.createObjectURL(file) });
+    setMaterials(previous => [...previous, material]);
+    openInPane(material, uploadTargetPane);
+    setUploadTargetPane(null);
+  }
+
   async function handleIconChange(subjectId: string, iconName: string) {
     try {
       await api.updateSubject(subjectId, { icon: iconName });
@@ -221,6 +255,43 @@ export default function NotesPage() {
 
   // ── Workspace / Split-Screen View ─────────────────────
   if (activeTopic && activeSubject) {
+    const folderCards = [
+      { name: 'PDFs', color: 'bg-sky-500', icon: FileText },
+      { name: 'PPTs', color: 'bg-amber-400', icon: Presentation },
+      { name: 'Digital Notes', color: 'bg-violet-400', icon: FileText },
+      { name: 'Handwritten Notes', color: 'bg-emerald-500', icon: Image },
+      { name: 'AI Notes', color: 'bg-orange-400', icon: MessageSquare },
+      { name: 'Others', color: 'bg-slate-500', icon: Folder },
+      ...customFolders.map((name, index) => ({ name, color: ['bg-pink-400', 'bg-teal-500', 'bg-indigo-400'][index % 3], icon: Folder })),
+    ];
+    const categoryMaterials = activeFolder === 'PDFs' ? materials.filter(item => item.material_type === 'pdf')
+      : activeFolder === 'PPTs' ? materials.filter(item => item.material_type === 'ppt')
+      : activeFolder === 'Handwritten Notes' ? materials.filter(item => item.material_type === 'handwritten_image')
+      : activeFolder === 'Others' ? materials.filter(item => ['attachment', 'video', 'link'].includes(item.material_type))
+      : [];
+
+    // Opening an index starts here: a folder grid, never a split-screen workspace.
+    if (openPanes.every(pane => pane === null)) {
+      return (
+        <div className={`min-h-screen p-6 ${isDark ? 'bg-[#280B0F] text-[#F7EFE6]' : 'bg-[var(--color-bg-base)] text-[#2D3A47]'}`}>
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-7 flex items-center gap-3">
+              <button onClick={() => { setActiveTopic(null); setActiveFolder(null); }} className="rounded-lg p-2 hover:bg-black/5" aria-label="Back to indexes"><ArrowLeft size={19}/></button>
+              <div className="min-w-0"><p className="text-xs opacity-60">{activeSubject.name}</p><h2 className="truncate text-xl font-bold">Index {activeTopic.serial_number}: {activeTopic.title}</h2></div>
+            </div>
+            {activeFolder ? <>
+              <div className="mb-5 flex items-center justify-between"><button onClick={() => setActiveFolder(null)} className="text-sm font-medium text-[#B46A72]">← All folders</button><button onClick={() => setShowNewFolderInput(true)} className="rounded-lg border px-3 py-2 text-sm"><Plus size={15} className="mr-1 inline"/>New folder</button></div>
+              <h3 className="mb-4 text-lg font-bold">{activeFolder}</h3>
+              {activeFolder === 'Digital Notes' ? <button onClick={() => { setSplitCount(1); openInPane('notes', 0); }} className="rounded-xl border bg-white p-5 text-left shadow-sm"><FileText className="mb-3 text-violet-500"/><p className="font-semibold">Open digital notes</p><p className="mt-1 text-xs text-surface-500">Create or continue notes for this index</p></button> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{categoryMaterials.length ? categoryMaterials.map(material => { const Icon = getMaterialIcon(material.material_type); return <button key={material.id} onClick={() => { setSplitCount(1); openInPane(material, 0); }} className="rounded-xl border bg-white p-4 text-left shadow-sm hover:border-[#B46A72]"><Icon className="mb-3 text-[#B46A72]"/><p className="truncate font-semibold">{material.title}</p><p className="mt-1 text-xs text-surface-500">{getMaterialLabel(material.material_type)} · {formatFileSize(material.file_size_bytes)}</p></button>; }) : <p className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm opacity-60">No files in this folder yet.</p>}</div>}
+            </> : <>
+              <div className="mb-5 flex items-center justify-between"><p className="text-sm opacity-60">Choose a folder to see its files and notes.</p><button onClick={() => setShowNewFolderInput(true)} className="rounded-lg border px-3 py-2 text-sm"><Plus size={15} className="mr-1 inline"/>Add folder</button></div>
+              {showNewFolderInput && <div className="mb-5 flex max-w-sm gap-2"><input autoFocus value={newFolderName} onChange={event => setNewFolderName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && newFolderName.trim()) { setCustomFolders(previous => [...previous, newFolderName.trim()]); setNewFolderName(''); setShowNewFolderInput(false); } }} placeholder="Folder name" className="flex-1 rounded-lg border px-3 py-2 text-sm"/><button onClick={() => { if (newFolderName.trim()) { setCustomFolders(previous => [...previous, newFolderName.trim()]); setNewFolderName(''); setShowNewFolderInput(false); } }} className="rounded-lg bg-[#B46A72] px-3 py-2 text-sm text-white">Add</button></div>}
+              <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">{folderCards.map(({ name, color, icon: Icon }) => <button key={name} onClick={() => setActiveFolder(name)} className="text-left"><div className={`${color} relative mb-2 aspect-[1.35] rounded-xl p-4 text-white shadow-sm transition-transform hover:-translate-y-1`}><Folder size={44} fill="currentColor" className="opacity-90"/><Icon size={20} className="absolute bottom-4 right-4 opacity-80"/></div><p className="truncate text-sm font-semibold">{name}</p><p className="text-xs opacity-55">{name === 'PDFs' ? materials.filter(item => item.material_type === 'pdf').length : name === 'PPTs' ? materials.filter(item => item.material_type === 'ppt').length : name === 'Handwritten Notes' ? materials.filter(item => item.material_type === 'handwritten_image').length : 0} items</p></button>)}</div>
+            </>}
+          </div>
+        </div>
+      );
+    }
     return (
       <div
         className={`min-h-screen flex flex-col ${
@@ -234,9 +305,7 @@ export default function NotesPage() {
           }`}
         >
           <button
-            onClick={() => {
-              navigate(`/subjects/${activeSubject.id}`);
-            }}
+            onClick={() => setActiveTopic(null)}
             className={`p-2 rounded-lg transition-colors ${
               isDark ? 'hover:bg-[#7B694E]/30 text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
             }`}
@@ -279,7 +348,7 @@ export default function NotesPage() {
         {/* Workspace body */}
         <div className="flex flex-1 overflow-hidden">
           {/* Material sidebar with Folders */}
-          <aside
+          {filePickerPane === -1 && <aside
             className={`w-64 shrink-0 border-r overflow-y-auto ${
               isDark ? 'border-[#7B694E]/30 bg-[#280B0F]' : 'border-[#F7C8D3]/40 bg-[#FFF5F6]'
             }`}
@@ -422,7 +491,7 @@ export default function NotesPage() {
                 </div>
               </div>
             </div>
-          </aside>
+          </aside>}
 
           {/* Split panes */}
           <div className="flex-1 flex overflow-hidden">
@@ -435,10 +504,7 @@ export default function NotesPage() {
               >
                 {pane === null ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center opacity-40">
-                      <FolderOpen size={32} className="mx-auto mb-2" />
-                      <p className="text-sm">Select a material from the sidebar</p>
-                    </div>
+                    <div className="flex flex-col gap-2"><button type="button" onClick={() => openFilePicker(idx)} className="rounded-xl border border-dashed border-current px-6 py-4 text-center opacity-60 hover:opacity-100"><FolderOpen size={28} className="mx-auto mb-2"/><p className="text-sm font-semibold">Open a file</p><p className="mt-1 text-xs">Choose subject, index, folder, and file</p></button><button type="button" onClick={() => { setUploadTargetPane(idx); fileInputRef.current?.click(); }} className="rounded-lg border px-4 py-2 text-sm opacity-70 hover:opacity-100"><Upload size={15} className="mr-1 inline"/>Add a file</button></div>
                   </div>
                 ) : pane === 'notes' ? (
                   <div className="flex-1 flex flex-col">
@@ -508,6 +574,18 @@ export default function NotesPage() {
             ))}
           </div>
         </div>
+        {filePickerPane !== null && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className={`w-full max-w-2xl rounded-2xl p-6 shadow-2xl ${isDark ? 'bg-[#3B1319] text-[#F7EFE6]' : 'bg-white text-[#2D3A47]'}`}>
+            <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-bold">Open a file in panel {filePickerPane + 1}</h3><p className="text-sm opacity-60">Choose where the file is stored.</p></div><button onClick={() => setFilePickerPane(null)} className="rounded p-2 hover:bg-black/5" aria-label="Close"><X size={18}/></button></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-medium">1. Subject<select value={pickerSubjectId} onChange={event => choosePickerSubject(event.target.value)} className="mt-1.5 w-full rounded-lg border bg-transparent px-3 py-2"><option value="">Choose subject</option>{subjects.map(subject => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label>
+              <label className="text-sm font-medium">2. Index / chapter<select value={pickerTopicId} disabled={!pickerSubjectId} onChange={event => choosePickerIndex(event.target.value)} className="mt-1.5 w-full rounded-lg border bg-transparent px-3 py-2 disabled:opacity-50"><option value="">Choose index</option>{pickerTopics.map(topic => <option key={topic.id} value={topic.id}>#{topic.serial_number} {topic.title}</option>)}</select></label>
+              <label className="text-sm font-medium sm:col-span-2">3. Folder<select value={pickerFolder} onChange={event => setPickerFolder(event.target.value)} disabled={!pickerTopicId} className="mt-1.5 w-full rounded-lg border bg-transparent px-3 py-2 disabled:opacity-50"><option>All files</option><option>PDFs</option><option>PPTs</option><option>Handwritten Notes</option><option>Others</option></select></label>
+            </div>
+            <div className="mt-5"><p className="mb-2 text-sm font-medium">4. Choose file</p><div className="max-h-56 space-y-2 overflow-y-auto">{pickerMaterials.filter(item => pickerFolder === 'All files' || (pickerFolder === 'PDFs' && item.material_type === 'pdf') || (pickerFolder === 'PPTs' && item.material_type === 'ppt') || (pickerFolder === 'Handwritten Notes' && item.material_type === 'handwritten_image') || (pickerFolder === 'Others' && !['pdf','ppt','handwritten_image'].includes(item.material_type))).map(item => { const Icon = getMaterialIcon(item.material_type); return <button key={item.id} onClick={() => { openInPane(item, filePickerPane); setFilePickerPane(null); }} className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:border-[#B46A72]"><Icon size={18} className="text-[#B46A72]"/><span className="flex-1 truncate text-sm font-medium">{item.title}</span><span className="text-xs opacity-55">{getMaterialLabel(item.material_type)}</span></button>; })}{pickerTopicId && !pickerMaterials.length && <p className="rounded-lg border border-dashed p-4 text-center text-sm opacity-60">No files in this index yet.</p>}{!pickerTopicId && <p className="rounded-lg border border-dashed p-4 text-center text-sm opacity-60">Select a subject and index first.</p>}</div></div>
+          </div>
+        </div>}
+        <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.mp4,.webm" onChange={event => { uploadIntoPane(event.target.files); event.target.value = ''; }} />
       </div>
     );
   }
@@ -527,7 +605,8 @@ export default function NotesPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                navigate('/notes');
+                setActiveSubject(null);
+                setTopics([]);
               }}
               className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
@@ -552,7 +631,7 @@ export default function NotesPage() {
               setNewTopicTitle('');
               setShowNewTopicModal(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
           >
             <Plus size={16} />
             Add Index Topic
@@ -665,50 +744,13 @@ export default function NotesPage() {
                   #{topic.serial_number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-base truncate">{topic.title}</h3>
-                    {topic.topic_id_ref && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B46A72]/20 text-[#B46A72]">
-                        Subtopic
-                      </span>
-                    )}
-                  </div>
+                  <h3 className="font-semibold text-base truncate">{topic.title}</h3>
                   <div className="flex items-center gap-3 mt-1 text-xs opacity-60">
                     <span>{topic.material_count ?? 0} materials</span>
                     {topic.status && (
                       <span className="capitalize">{topic.status.replace('_', ' ')}</span>
                     )}
                   </div>
-                </div>
-
-                {/* Action buttons (Add Subtopic) */}
-                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={async () => {
-                      const subTitle = prompt(`Enter subtopic title under #${topic.serial_number} ${topic.title}:`);
-                      if (!subTitle || !activeSubject) return;
-                      try {
-                        const nextSerial = topics.length + 1;
-                        const created: Topic = await api.createTopic(activeSubject.id, {
-                          serial_number: nextSerial,
-                          title: subTitle.trim(),
-                          status: 'todo',
-                          tags: ['#subtopic'],
-                          topic_id_ref: topic.id,
-                          referenced_topic_title: topic.title,
-                        });
-                        setTopics((prev) => [...prev, created]);
-                      } catch (err) {
-                        console.error('Failed to create subtopic:', err);
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      isDark ? 'bg-[#7B694E]/30 text-[#C6B39A] hover:bg-[#7B694E]/50' : 'bg-[#F7C8D3]/40 text-[#2D3A47] hover:bg-[#F7C8D3]/60'
-                    }`}
-                    title="Add subtopic under this index"
-                  >
-                    + Add Subtopic
-                  </button>
                 </div>
                 {/* Progress */}
                 {topic.progress !== undefined && topic.progress > 0 && (
@@ -732,6 +774,93 @@ export default function NotesPage() {
                 />
               </button>
             ))}
+          </div>
+        )}
+
+        {/* New Index Topic Modal inside Subject View */}
+        {showNewTopicModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div
+              className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+                isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-bold text-lg">Add New Index Topic / Chapter</h3>
+                <button onClick={() => setShowNewTopicModal(false)} className="p-1.5 rounded-lg hover:bg-black/5">
+                  <X size={18} className="opacity-60" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase opacity-60 mb-2">Topic Title</label>
+                  <input
+                    type="text"
+                    value={newTopicTitle}
+                    onChange={(e) => setNewTopicTitle(e.target.value)}
+                    placeholder="e.g. Advanced Decision Trees & Random Forests"
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                      isDark ? 'bg-[#280B0F] border-[#7B694E]/40 text-white' : 'bg-white border-[#F7C8D3]'
+                    }`}
+                    autoFocus
+                    onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'Enter' && newTopicTitle.trim() && activeSubject) {
+                        e.preventDefault();
+                        try {
+                          const nextSerial = topics.length + 1;
+                          const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                            serial_number: nextSerial,
+                            title: newTopicTitle.trim(),
+                            status: 'todo',
+                            tags: ['#chapter'],
+                          });
+                          setTopics((prev) => [...prev, created]);
+                          setNewTopicTitle('');
+                          setShowNewTopicModal(false);
+                        } catch (err) {
+                          console.error('Failed to create topic:', err);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowNewTopicModal(false)}
+                  className={`px-4 py-2 rounded-xl font-semibold text-sm ${
+                    isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!newTopicTitle.trim() || !activeSubject) return;
+                    try {
+                      const nextSerial = topics.length + 1;
+                      const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                        serial_number: nextSerial,
+                        title: newTopicTitle.trim(),
+                        status: 'todo',
+                        tags: ['#chapter'],
+                      });
+                      setTopics((prev) => [...prev, created]);
+                      setNewTopicTitle('');
+                      setShowNewTopicModal(false);
+                    } catch (err) {
+                      console.error('Failed to create topic:', err);
+                    }
+                  }}
+                  disabled={!newTopicTitle.trim()}
+                  className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50"
+                >
+                  Add Topic
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -878,10 +1007,10 @@ export default function NotesPage() {
 
       {/* New Index Topic Modal */}
       {showNewTopicModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div
-            className={`w-full max-w-md p-6 rounded-3xl shadow-2xl border ${
-              isDark ? 'bg-[#3B1319] border-[#7B694E]/60 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3] text-[#2D3A47]'
+            className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+              isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
             }`}
           >
             <div className="flex items-center justify-between mb-4">

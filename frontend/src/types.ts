@@ -42,11 +42,22 @@ export interface Topic {
   due_date?: string;
   subject_id_ref?: string;
   topic_id_ref?: string;
+  /** A sub-index belongs to an index; root indexes have no parent. */
+  parent_topic_id?: string | null;
   referenced_subject_name?: string;
   referenced_topic_title?: string;
 }
 
-export type MaterialType = 'pdf' | 'ppt' | 'handwritten_image' | 'chatbot_note' | 'attachment';
+export type MaterialType = 'pdf' | 'ppt' | 'handwritten_image' | 'chatbot_note' | 'attachment' | 'video' | 'link';
+
+export interface Folder {
+  id: string;
+  topic_id: string;
+  name: string;
+  parent_folder_id: string | null;
+  kind?: 'default' | 'custom';
+  created_at: string;
+}
 
 export interface Material {
   id: string;
@@ -59,6 +70,8 @@ export interface Material {
   page_count: number | null;
   created_at: string;
   updated_at: string;
+  folder_id?: string | null;
+  url?: string | null;
 }
 
 export interface DigitalNote {
@@ -66,22 +79,31 @@ export interface DigitalNote {
   topic_id: string;
   content: Record<string, unknown>; // Tiptap JSON
   updated_at: string;
+  title?: string;
+  folder_id?: string | null;
 }
 
-export type WorkspaceLayoutMode = 'single' | 'split';
+export type WorkspaceLayoutMode = 'single' | 'split' | 'triple' | 'quad';
+
+export interface WorkspacePanelState {
+  item_id: string | null;
+  page: number;
+  zoom: number;
+}
 
 export interface WorkspaceSettings {
   id: string;
   user_id: string;
   topic_id: string;
   layout: WorkspaceLayoutMode;
-left_material_id: string | null;
+  left_material_id: string | null;
   right_material_id: string | null;
   left_page: number;
   right_page: number;
   left_zoom: number;
   right_zoom: number;
   preferences: Record<string, unknown>;
+  panels?: WorkspacePanelState[];
 }
 
 export interface ImportJob {
