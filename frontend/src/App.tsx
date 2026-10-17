@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/AppLayout';
 import EnhancedTodoPage from '@/features/todo/EnhancedTodoPage';
 import SchedulePage from '@/features/schedule/SchedulePage';
 import NotesPage from '@/features/notes/NotesPage';
+import StandaloneNotesPage from '@/features/notes/StandaloneNotesPage';
 import SettingsPage from '@/features/settings/SettingsPage';
 import AIAssistantPage from '@/features/ai/AIStudyAssistantPage';
 import FlashcardsPage from '@/features/flashcards/FlashcardPage';
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/dashboard" element={<Navigate to="/todo" replace />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/notes" element={<NotesPage />} />
+              <Route path="/standalone-notes" element={<StandaloneNotesPage />} />
               <Route path="/flashcards" element={<FlashcardsPage />} />
               <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/settings" element={<SettingsPage />} />

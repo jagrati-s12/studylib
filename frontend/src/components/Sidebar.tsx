@@ -106,6 +106,13 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }: Sideba
               isDark={isDark}
             />
             <NavItem
+              to="/standalone-notes"
+              icon={FileText}
+              label="Scratch Notes"
+              collapsed={collapsed}
+              isDark={isDark}
+            />
+            <NavItem
               to="/flashcards"
               icon={Brain}
               label="Flashcards"

@@ -115,9 +115,11 @@ export default function NotesPage() {
   const [splitCount, setSplitCount] = useState<SplitCount>(2);
   const [openPanes, setOpenPanes] = useState<(Material | 'notes' | null)[]>([null, null]);
 
-  // Icon picker state & New Subject Modal
+  // Icon picker state & New Subject Modal & New Topic Modal
   const [iconPickerSubject, setIconPickerSubject] = useState<string | null>(null);
   const [showNewSubjectModal, setShowNewSubjectModal] = useState(false);
+  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
+  const [newTopicTitle, setNewTopicTitle] = useState('');
 
   // Nested folders state inside Materials
   const [customFolders, setCustomFolders] = useState<string[]>(['Chapter 1 Notes', 'Extra References', 'Problem Sets']);
@@ -126,9 +128,34 @@ export default function NotesPage() {
   const [newFolderName, setNewFolderName] = useState('');
 
   useEffect(() => {
-    api.getSubjects().then((data) => {
+    api.getSubjects().then(async (data) => {
       setSubjects(data);
       setLoading(false);
+
+      // Check URL query parameters for deep linking (e.g. ?subjectId=...&topicId=...)
+      const params = new URLSearchParams(window.location.search);
+      const subjectId = params.get('subjectId');
+      const topicId = params.get('topicId');
+      if (subjectId) {
+        const targetSub = data.find((s) => s.id === subjectId) || data[0];
+        if (targetSub) {
+          setActiveSubject(targetSub);
+          setTopicsLoading(true);
+          const topicList = await api.getTopics(targetSub.id);
+          setTopics(topicList);
+          setTopicsLoading(false);
+          if (topicId) {
+            const targetTopic = topicList.find((t) => t.id === topicId);
+            if (targetTopic) {
+              setActiveTopic(targetTopic);
+              const mats = await api.getMaterials(targetTopic.id);
+              setMaterials(mats);
+              setOpenPanes([null, null]);
+              setSplitCount(2);
+            }
+          }
+        }
+      }
     });
   }, []);
 
@@ -518,22 +545,77 @@ export default function NotesPage() {
           </div>
 
           <button
-            onClick={async () => {
-              const title = prompt('Enter new topic/chapter title:');
-              if (title) {
-                const newTopic = await api.createTopic(activeSubject.id, {
-                  serial_number: topics.length + 1,
-                  title,
-                  status: 'todo',
-                });
-                setTopics([...topics, newTopic]);
-              }
+            onClick={() => {
+              setNewTopicTitle('');
+              setShowNewTopicModal(true);
             }}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
           >
             <Plus size={16} />
             Add Index Topic
           </button>
+        </div>
+
+        {/* Inline Add Topic Card (Always available right on the subject page) */}
+        <div
+          className={`mb-6 p-4 rounded-2xl border shadow-sm ${
+            isDark ? 'bg-[#3B1319]/80 border-[#7B694E]/40' : 'bg-white border-[#F7C8D3]/80'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#B46A72]/20 text-[#B46A72] flex items-center justify-center shrink-0 font-bold text-sm">
+              #{topics.length + 1}
+            </div>
+            <input
+              type="text"
+              value={newTopicTitle}
+              onChange={(e) => setNewTopicTitle(e.target.value)}
+              placeholder="Type new index topic or chapter title and press Enter..."
+              className={`flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                isDark ? 'bg-[#280B0F] border-[#7B694E]/40 text-white placeholder:text-[#C6B39A]/40' : 'bg-[#FFF9F3] border-[#F7C8D3] text-[#2D3A47] placeholder:text-[#2D3A47]/40'
+              }`}
+              onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter' && newTopicTitle.trim() && activeSubject) {
+                  e.preventDefault();
+                  try {
+                    const nextSerial = topics.length + 1;
+                    const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                      serial_number: nextSerial,
+                      title: newTopicTitle.trim(),
+                      status: 'todo',
+                      tags: ['#chapter'],
+                    });
+                    setTopics((prev) => [...prev, created]);
+                    setNewTopicTitle('');
+                  } catch (err) {
+                    console.error('Failed to create topic inline:', err);
+                  }
+                }
+              }}
+            />
+            <button
+              onClick={async () => {
+                if (!newTopicTitle.trim() || !activeSubject) return;
+                try {
+                  const nextSerial = topics.length + 1;
+                  const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                    serial_number: nextSerial,
+                    title: newTopicTitle.trim(),
+                    status: 'todo',
+                    tags: ['#chapter'],
+                  });
+                  setTopics((prev) => [...prev, created]);
+                  setNewTopicTitle('');
+                } catch (err) {
+                  console.error('Failed to create topic inline:', err);
+                }
+              }}
+              disabled={!newTopicTitle.trim()}
+              className="px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50 shrink-0"
+            >
+              Add Topic
+            </button>
+          </div>
         </div>
 
         {/* Topics Index list */}
@@ -752,6 +834,93 @@ export default function NotesPage() {
             setShowNewSubjectModal(false);
           }}
         />
+      )}
+
+      {/* New Index Topic Modal */}
+      {showNewTopicModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div
+            className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+              isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-lg">Add New Index Topic / Chapter</h3>
+              <button onClick={() => setShowNewTopicModal(false)} className="p-1.5 rounded-lg hover:bg-black/5">
+                <X size={18} className="opacity-60" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase opacity-60 mb-2">Topic Title</label>
+                <input
+                  type="text"
+                  value={newTopicTitle}
+                  onChange={(e) => setNewTopicTitle(e.target.value)}
+                  placeholder="e.g. Advanced Decision Trees & Random Forests"
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                    isDark ? 'bg-[#280B0F] border-[#7B694E]/40 text-white' : 'bg-white border-[#F7C8D3]'
+                  }`}
+                  autoFocus
+                  onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Enter' && newTopicTitle.trim() && activeSubject) {
+                      e.preventDefault();
+                      try {
+                        const nextSerial = topics.length + 1;
+                        const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                          serial_number: nextSerial,
+                          title: newTopicTitle.trim(),
+                          status: 'todo',
+                          tags: ['#chapter'],
+                        });
+                        setTopics((prev) => [...prev, created]);
+                        setNewTopicTitle('');
+                        setShowNewTopicModal(false);
+                      } catch (err) {
+                        console.error('Failed to create topic:', err);
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowNewTopicModal(false)}
+                className={`px-4 py-2 rounded-xl font-semibold text-sm ${
+                  isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!newTopicTitle.trim() || !activeSubject) return;
+                  try {
+                    const nextSerial = topics.length + 1;
+                    const created: Topic = await api.createTopic((activeSubject as Subject).id, {
+                      serial_number: nextSerial,
+                      title: newTopicTitle.trim(),
+                      status: 'todo',
+                      tags: ['#chapter'],
+                    });
+                    setTopics((prev) => [...prev, created]);
+                    setNewTopicTitle('');
+                    setShowNewTopicModal(false);
+                  } catch (err) {
+                    console.error('Failed to create topic:', err);
+                  }
+                }}
+                disabled={!newTopicTitle.trim()}
+                className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50"
+              >
+                Add Topic
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Icon Picker Modal */}

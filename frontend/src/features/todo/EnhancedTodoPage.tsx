@@ -18,10 +18,11 @@ import {
   Zap,
   Layers,
   BookOpen,
+  ExternalLink,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useTheme } from '@/context/ThemeContext';
-import type { Topic, TopicStatus, ChecklistItem } from '@/types';
+import type { Topic, TopicStatus, ChecklistItem, Subject } from '@/types';
 
 type TodoCategory = 'projects' | 'goals' | 'habits' | 'categories' | 'study';
 type TimeView = 'all' | 'day' | 'week' | 'month';
@@ -597,6 +598,31 @@ function TodoItemCard({
               <span>Updated {new Date(topic.updated_at).toLocaleDateString()}</span>
             </div>
 
+            {/* Linked Note Reference Badge */}
+            {topic.subject_id_ref && topic.topic_id_ref && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/notes?subjectId=${topic.subject_id_ref}&topicId=${topic.topic_id_ref}`;
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105 ${
+                    isDark
+                      ? 'bg-[#7B694E]/30 text-[#C6B39A] border border-[#7B694E]/50 hover:bg-[#7B694E]/50'
+                      : 'bg-[#F7C8D3]/30 text-[#B46A72] border border-[#F7C8D3] hover:bg-[#F7C8D3]/50'
+                  }`}
+                  title="Click to open linked note"
+                >
+                  <BookOpen size={13} />
+                  <span>
+                    Linked Note: {topic.referenced_subject_name || 'Subject'} &gt; {topic.referenced_topic_title || `Index Topic`}
+                  </span>
+                  <ExternalLink size={12} className="opacity-70" />
+                </button>
+              </div>
+            )}
+
             {topic.note && (
               <div
                 className={`p-3 rounded-xl text-xs leading-relaxed flex items-start gap-2 ${
@@ -708,6 +734,32 @@ function TodoModal({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(todo?.checklist || []);
   const [checklistItemInput, setChecklistItemInput] = useState('');
 
+  // Note linking states
+  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
+  const [selectedSubjectRef, setSelectedSubjectRef] = useState<string>(todo?.subject_id_ref || '');
+  const [selectedTopicRef, setSelectedTopicRef] = useState<string>(todo?.topic_id_ref || '');
+
+  useEffect(() => {
+    api.getSubjects().then((subs) => {
+      setAllSubjects(subs);
+      if (todo?.subject_id_ref) {
+        api.getTopics(todo.subject_id_ref).then((tops) => setAvailableTopics(tops));
+      }
+    });
+  }, [todo]);
+
+  const handleSubjectRefChange = async (subjectId: string) => {
+    setSelectedSubjectRef(subjectId);
+    setSelectedTopicRef('');
+    if (subjectId) {
+      const tops = await api.getTopics(subjectId);
+      setAvailableTopics(tops);
+    } else {
+      setAvailableTopics([]);
+    }
+  };
+
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
@@ -739,6 +791,9 @@ function TodoModal({
     const completedCount = checklist.filter((i) => i.completed).length;
     const progress = checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : (status === 'done' ? 100 : 0);
 
+    const targetSubject = allSubjects.find((s) => s.id === selectedSubjectRef);
+    const targetTopic = availableTopics.find((t) => t.id === selectedTopicRef);
+
     const newTodo: TodoItem = {
       id: todo?.id || Date.now().toString(),
       subject_id: todo?.subject_id || 'default',
@@ -753,6 +808,10 @@ function TodoModal({
       checklist,
       due_date: dueDate || undefined,
       progress,
+      subject_id_ref: selectedSubjectRef || undefined,
+      topic_id_ref: selectedTopicRef || undefined,
+      referenced_subject_name: targetSubject?.name || undefined,
+      referenced_topic_title: targetTopic ? `${targetTopic.serial_number}. ${targetTopic.title}` : undefined,
       updated_at: new Date().toISOString(),
     };
 
@@ -767,7 +826,11 @@ function TodoModal({
         note: newTodo.note,
         checklist: newTodo.checklist,
         due_date: newTodo.due_date,
-      });
+        subject_id_ref: newTodo.subject_id_ref,
+        topic_id_ref: newTodo.topic_id_ref,
+        referenced_subject_name: newTodo.referenced_subject_name,
+        referenced_topic_title: newTodo.referenced_topic_title,
+      } as any);
     }
 
     onSave(newTodo);
@@ -938,6 +1001,59 @@ function TodoModal({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Note Linking Section */}
+          <div className={`p-4 rounded-xl border ${isDark ? 'bg-[#280B0F]/45 border-[#7B694E]/30' : 'bg-[#F7C8D3]/10 border-[#F7C8D3]/40'}`}>
+            <label className="block text-sm font-semibold mb-1.5 flex items-center gap-1.5">
+              <BookOpen size={16} className="text-[#B46A72]" />
+              Link Note Reference (Optional)
+            </label>
+            <p className="text-xs opacity-70 mb-3">
+              Connect this todo directly to a note subject and topic/chapter index.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1 opacity-80">Subject</label>
+                <select
+                  value={selectedSubjectRef}
+                  onChange={(e) => handleSubjectRefChange(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 ${
+                    isDark
+                      ? 'bg-[#280B0F] border-[#7B694E]/40 text-[#F7EFE6] focus:border-[#C6B39A] focus:ring-[#C6B39A]/20'
+                      : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47] focus:border-[#B46A72] focus:ring-[#B46A72]/20'
+                  }`}
+                >
+                  <option value="">Select subject...</option>
+                  {allSubjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1 opacity-80">Topic / Chapter Index</label>
+                <select
+                  value={selectedTopicRef}
+                  onChange={(e) => setSelectedTopicRef(e.target.value)}
+                  disabled={!selectedSubjectRef}
+                  className={`w-full px-3 py-2 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 disabled:opacity-50 ${
+                    isDark
+                      ? 'bg-[#280B0F] border-[#7B694E]/40 text-[#F7EFE6] focus:border-[#C6B39A] focus:ring-[#C6B39A]/20'
+                      : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47] focus:border-[#B46A72] focus:ring-[#B46A72]/20'
+                  }`}
+                >
+                  <option value="">Select topic index...</option>
+                  {availableTopics.map((top) => (
+                    <option key={top.id} value={top.id}>
+                      #{top.serial_number}: {top.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Subject Color Picker */}

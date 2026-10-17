@@ -354,6 +354,11 @@ export const mockApi = {
     return [...mockSubjects];
   },
 
+  async getSubject(id: string): Promise<Subject | null> {
+    await delay(200);
+    return mockSubjects.find(s => s.id === id) ?? null;
+  },
+
   async createSubject(data: { name: string; color: string }): Promise<Subject> {
     await delay(300);
     const subject: Subject = {
@@ -398,6 +403,15 @@ export const mockApi = {
     return mockTopics[subjectId] ?? [];
   },
 
+  async getTopic(id: string): Promise<Topic | null> {
+    await delay(200);
+    for (const list of Object.values(mockTopics)) {
+      const found = list.find(t => t.id === id);
+      if (found) return found;
+    }
+    return null;
+  },
+
   async createTopic(
     subjectId: string,
     data: {
@@ -408,6 +422,10 @@ export const mockApi = {
       checklist?: Topic['checklist'];
       note?: string;
       due_date?: string;
+      subject_id_ref?: string;
+      topic_id_ref?: string;
+      referenced_subject_name?: string;
+      referenced_topic_title?: string;
     }
   ): Promise<Topic> {
     await delay(300);
@@ -426,6 +444,10 @@ export const mockApi = {
       checklist: data.checklist ?? [],
       note: data.note,
       due_date: data.due_date,
+      subject_id_ref: data.subject_id_ref,
+      topic_id_ref: data.topic_id_ref,
+      referenced_subject_name: data.referenced_subject_name,
+      referenced_topic_title: data.referenced_topic_title,
     };
     if (!mockTopics[subjectId]) mockTopics[subjectId] = [];
     mockTopics[subjectId].push(topic);
@@ -536,19 +558,4 @@ export const mockApi = {
     return ws;
   },
 
-  // Get a single subject
-  async getSubject(id: string): Promise<Subject | undefined> {
-    await delay(100);
-    return mockSubjects.find(s => s.id === id);
-  },
-
-  // Get a single topic
-  async getTopic(id: string): Promise<Topic | undefined> {
-    await delay(100);
-    for (const topics of Object.values(mockTopics)) {
-      const found = topics.find(t => t.id === id);
-      if (found) return found;
-    }
-    return undefined;
-  },
 };

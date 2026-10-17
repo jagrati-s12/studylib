@@ -219,9 +219,11 @@ export default function SchedulePage() {
     });
   };
 
-  const timeSlots = Array.from({ length: 13 }, (_, i) => {
-    const hour = i + 8;
-    return hour <= 12 ? `${hour.toString().padStart(2, '0')} AM` : `${(hour - 12).toString().padStart(2, '0')} PM`;
+  const timeSlots = Array.from({ length: 24 }, (_, hour) => {
+    if (hour === 0) return '12 AM';
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return '12 PM';
+    return `${hour - 12} PM`;
   });
 
   const weekDates = getWeekDates(currentDate);
@@ -538,7 +540,7 @@ function DailyView({
   getEventsForDate: (date: Date) => CalendarEvent[];
 }) {
   const dayEvents = getEventsForDate(currentDate);
-  const timeSlots = Array.from({ length: 13 }, (_, i) => i + 8);
+  const timeSlots = Array.from({ length: 24 }, (_, i) => i);
 
   return (
     <div
@@ -561,6 +563,8 @@ function DailyView({
               return eventStart.getHours() === hour;
             });
 
+            const hourLabel = hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`;
+
             return (
               <div key={hour} className="flex divide-x divide-inherit">
                 <div
@@ -568,7 +572,7 @@ function DailyView({
                     isDark ? 'bg-[#280B0F]/60' : 'bg-[#F7C8D3]/20'
                   }`}
                 >
-                  {hour <= 12 ? `${hour} AM` : `${hour - 12} PM`}
+                  {hourLabel}
                 </div>
                 <div className="flex-1 p-4">
                   <div className="space-y-2">
@@ -671,8 +675,7 @@ function WeeklyView({
       </div>
 
       {/* Time Slots */}
-      {timeSlots.map((time, idx) => {
-        const hour = idx + 8;
+      {timeSlots.map((time, hour) => {
         return (
           <div
             key={time}
