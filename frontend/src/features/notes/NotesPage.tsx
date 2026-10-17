@@ -549,7 +549,7 @@ export default function NotesPage() {
               setNewTopicTitle('');
               setShowNewTopicModal(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all cursor-pointer"
           >
             <Plus size={16} />
             Add Index Topic
@@ -838,10 +838,10 @@ export default function NotesPage() {
 
       {/* New Index Topic Modal */}
       {showNewTopicModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
-            className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
-              isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
+            className={`w-full max-w-md p-6 rounded-3xl shadow-2xl border ${
+              isDark ? 'bg-[#3B1319] border-[#7B694E]/60 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3] text-[#2D3A47]'
             }`}
           >
             <div className="flex items-center justify-between mb-4">
