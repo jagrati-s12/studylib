@@ -123,17 +123,17 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic 
               <td className="px-4 py-3 text-surface-400 text-xs">
                 {formatRelativeDate(topic.updated_at)}
               </td>
-              <td className="px-4 py-3 text-right flex items-center justify-end gap-1">
+              <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  title="Add subtopic"
                   onClick={e => {
                     e.stopPropagation();
                     onAddSubtopic(topic.id);
                   }}
-                  className="invisible group-hover:visible p-1.5 rounded-lg text-surface-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Subtopic
                 </button>
                 <button
                   type="button"
@@ -142,7 +142,7 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic 
                     e.stopPropagation();
                     onDeleteTopic(topic.id);
                   }}
-                  className="invisible group-hover:visible p-1.5 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="p-1.5 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
