@@ -227,7 +227,9 @@ export default function NotesPage() {
           }`}
         >
           <button
-            onClick={() => setActiveTopic(null)}
+            onClick={() => {
+              navigate(`/subjects/${activeSubject.id}`);
+            }}
             className={`p-2 rounded-lg transition-colors ${
               isDark ? 'hover:bg-[#7B694E]/30 text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#B46A72]'
             }`}
