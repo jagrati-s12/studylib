@@ -12,10 +12,12 @@ import WorkspaceLayout from './WorkspaceLayout';
 import MaterialPane from './MaterialPane';
 import { Folder as FolderIcon, FolderPlus, Plus, FileText, Upload, X } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
+import { useTheme } from '@/context/ThemeContext';
 
 export function TopicWorkspacePage() {
   const { subjectId, topicId } = useParams();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   const [subject, setSubject] = useState(null);
   const [topic, setTopic] = useState(null);
