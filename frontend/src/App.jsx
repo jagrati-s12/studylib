@@ -56,7 +56,7 @@ export default function App() {
                   <Route path="/dashboard" element={<Navigate to="/notes" replace />} />
                   <Route path="/schedule" element={<SchedulePage />} />
                   <Route path="/notes" element={<NotesPage />} />
-                  <Route path="/subjects/:subjectId" element={<SubjectPage />} />
+                  <Route path="/subjects/:subjectId" element={<NotesPage />} />
                   <Route path="/subjects/:subjectId/topics/:topicId" element={<TopicWorkspacePage />} />
                   <Route path="/standalone-notes" element={<StandaloneNotesPage />} />
                   <Route path="/pomodoro" element={<PomodoroPage />} />
