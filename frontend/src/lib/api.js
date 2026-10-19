@@ -364,6 +364,49 @@ export const api = {
     }
   },
 
+  // ---------------- SCHEDULE & ANALYTICS ----------------
+  async getSchedules() {
+    try {
+      const res = await safeFetch('/schedule');
+      if (res?.success && Array.isArray(res.schedules)) return res.schedules;
+      return [];
+    } catch {
+      return [];
+    }
+  },
+
+  async saveSchedule(data) {
+    try {
+      const res = await safeFetch('/schedule', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      if (res?.success && res.schedule) return res.schedule;
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteSchedule(id) {
+    try {
+      await safeFetch(`/schedule/${id}`, { method: 'DELETE' });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async getAnalytics() {
+    try {
+      const res = await safeFetch('/analytics');
+      if (res?.success && res.analytics) return res.analytics;
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
   // ---------------- AI CHAT & ANALYTICS ----------------
   async chatAI(prompt, notesContext = []) {
     try {

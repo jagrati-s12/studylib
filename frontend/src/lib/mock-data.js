@@ -68,4 +68,16 @@ export const mockApi = {
   async saveWorkspaceSettings(topicId, settings) {
     throw new Error('Backend required');
   },
+  async getAnalytics() {
+    return {
+      weeklyHours: 12.5,
+      streakDays: 7,
+      avgConfidence: 4.3,
+      completionRate: 82,
+      totalSessions: 0,
+      totalStudyMinutes: 0,
+      subjectsCount: 0,
+      topicsCount: 0
+    };
+  },
 };

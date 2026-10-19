@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { api } from '@/lib/api';
 import {
   BarChart2,
   TrendingUp,
@@ -21,11 +22,42 @@ export default function AnalyticsPage() {
 
   // Student Telemetry State for ML Prediction
   const [studentRecord, setStudentRecord] = useState({
-    weeklyHours: 32.5,
+    weeklyHours: 12.5,
     streakDays: 7,
-    avgConfidence: 4.2,
-    completionRate: 82
+    avgConfidence: 4.3,
+    completionRate: 82,
+    totalSessions: 0,
+    totalStudyMinutes: 0,
+    subjectsCount: 0,
+    topicsCount: 0
   });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const data = await api.getAnalytics();
+        if (data) {
+          setStudentRecord({
+            weeklyHours: data.weeklyHours || 12.5,
+            streakDays: data.streakDays || 7,
+            avgConfidence: data.avgConfidence || 4.3,
+            completionRate: data.completionRate || 82,
+            totalSessions: data.totalSessions || 0,
+            totalStudyMinutes: data.totalStudyMinutes || 0,
+            subjectsCount: data.subjectsCount || 0,
+            topicsCount: data.topicsCount || 0
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load live backend analytics:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
 
   // ML Training Simulation State
   const [isTraining, setIsTraining] = useState(false);
