@@ -477,46 +477,26 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Right Column: Pro Upgrade / Quick Stats Widget */}
+        {/* Right Column: Account Actions & Security Status Widget */}
         <div className="space-y-6">
-          {/* Study Pro / Stats Card inspired by inspiration widget */}
+          {/* Logout Action Card */}
           <div
-            className={`p-6 rounded-2xl border relative overflow-hidden transition-all ${
+            className={`p-6 rounded-2xl border transition-all space-y-4 ${
               isDark
-                ? 'bg-gradient-to-br from-[#3B1319] to-[#280B0F] border-[#7B694E]/40 text-[#C6B39A]'
-                : 'bg-gradient-to-br from-[#FFF5F6] to-[#F7C8D3]/30 border-[#F7C8D3] text-[#2D3A47] shadow-sm'
+                ? 'bg-[#280B0F]/70 border-[#3B1319] text-[#C6B39A]'
+                : 'bg-white border-[#F7C8D3] text-[#2D3A47] shadow-sm'
             }`}
           >
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Sparkles size={80} />
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Session & Account</h3>
+              <p className="text-xs opacity-70">Sign out of your account on this device.</p>
             </div>
-
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#B46A72] text-white">
-                Pro Study Pass
-              </span>
-              <span className="text-xs font-semibold opacity-70">Active Plan</span>
-            </div>
-
-            <div className="mb-4">
-              <div className="text-3xl font-display font-bold tracking-tight">
-                24 <span className="text-lg opacity-70">/ 30 days</span>
-              </div>
-              <p className="text-xs opacity-70 mt-1">
-                Study streak active! Keep going to unlock advanced analytics.
-              </p>
-            </div>
-
-            <div className="w-full h-2 rounded-full bg-black/10 mb-5 overflow-hidden">
-              <div className="h-full bg-[#B46A72] rounded-full w-[80%]" />
-            </div>
-
             <button
               type="button"
-              onClick={() => alert('You are on the Pro Study Pass!')}
-              className="w-full py-2.5 rounded-xl bg-[#2D3A47] dark:bg-[#C6B39A] dark:text-[#280B0F] text-white text-xs font-semibold shadow-sm hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-2"
+              onClick={handleLogout}
+              className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 border border-rose-500/20"
             >
-              <Sparkles size={14} /> View Pro Benefits
+              Log Out of Notie
             </button>
           </div>
 
