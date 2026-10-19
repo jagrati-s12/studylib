@@ -131,7 +131,8 @@ export default function SchedulePage() {
     const start = new Date(date);
     const day = start.getDay();
     const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
-    const monday = new Date(start.setDate(diff));
+    const monday = new Date(start);
+    monday.setDate(diff);
 
     const dates = [];
     for (let i = 0; i < 7; i++) {
