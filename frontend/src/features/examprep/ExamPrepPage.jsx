@@ -15,7 +15,7 @@ import {
 export default function ExamPrepPage() {
   const { isDark } = useTheme();
 
-  // Mock exams data with state handlers
+  // Mock exams data with state handlers (all subjects from Notes)
   const [exams, setExams] = useState([
     {
       id: 'ex-1',
@@ -46,6 +46,26 @@ export default function ExamPrepPage() {
       completedChapters: 6,
       confidence: 95,
       status: 'completed'
+    },
+    {
+      id: 'ex-4',
+      title: 'Operating Systems Certification',
+      subject: 'Operating Systems',
+      date: '2026-12-18',
+      totalChapters: 10,
+      completedChapters: 4,
+      confidence: 70,
+      status: 'upcoming'
+    },
+    {
+      id: 'ex-5',
+      title: 'Computer Networks Comprehensive Exam',
+      subject: 'Computer Networks',
+      date: '2027-01-10',
+      totalChapters: 9,
+      completedChapters: 3,
+      confidence: 60,
+      status: 'upcoming'
     }
   ]);
 
@@ -70,11 +90,19 @@ export default function ExamPrepPage() {
     { id: 'ch-6', examId: 'ex-1', title: 'Chapter 6: Cluster Analysis (K-Means, DBSCAN)', status: 'not_started', confidence: 2, hoursSpent: 0, notes: 'Pending.' },
     { id: 'ch-7', examId: 'ex-1', title: 'Chapter 7: Outlier Detection & Anomaly Mining', status: 'not_started', confidence: 1, hoursSpent: 0, notes: 'Pending.' },
     { id: 'ch-8', examId: 'ex-1', title: 'Chapter 8: Mining Data Streams & Graph Mining', status: 'not_started', confidence: 1, hoursSpent: 0, notes: 'Pending.' },
-    // Exam 2 chapters
+    // Exam 2 chapters (Machine Learning)
     { id: 'ch-9', examId: 'ex-2', title: 'Chapter 1: Linear Regression & Cost Functions', status: 'completed', confidence: 5, hoursSpent: 3.5, notes: 'Gradient descent.' },
     { id: 'ch-10', examId: 'ex-2', title: 'Chapter 2: Logistic Regression & Regularization', status: 'completed', confidence: 4, hoursSpent: 4.0, notes: 'L1 & L2 penalties.' },
-    // Exam 3 chapters
-    { id: 'ch-11', examId: 'ex-3', title: 'Chapter 1: Relational Algebra & SQL Optimization', status: 'completed', confidence: 5, hoursSpent: 5.0, notes: 'Execution plans.' },
+    { id: 'ch-11', examId: 'ex-2', title: 'Chapter 3: Neural Networks & Backpropagation', status: 'in_progress', confidence: 3, hoursSpent: 5.0, notes: 'Activation functions.' },
+    // Exam 3 chapters (Database Systems)
+    { id: 'ch-12', examId: 'ex-3', title: 'Chapter 1: Relational Algebra & SQL Optimization', status: 'completed', confidence: 5, hoursSpent: 5.0, notes: 'Execution plans.' },
+    { id: 'ch-13', examId: 'ex-3', title: 'Chapter 2: Transactions, ACID & Concurrency Control', status: 'completed', confidence: 5, hoursSpent: 4.0, notes: 'Two-phase locking.' },
+    // Exam 4 chapters (Operating Systems)
+    { id: 'ch-14', examId: 'ex-4', title: 'Chapter 1: Processes, Threads & CPU Scheduling', status: 'completed', confidence: 4, hoursSpent: 4.5, notes: 'Round robin & SJF.' },
+    { id: 'ch-15', examId: 'ex-4', title: 'Chapter 2: Synchronization, Semaphores & Deadlocks', status: 'in_progress', confidence: 3, hoursSpent: 3.5, notes: 'Bankers algorithm.' },
+    // Exam 5 chapters (Computer Networks)
+    { id: 'ch-16', examId: 'ex-5', title: 'Chapter 1: OSI & TCP/IP Reference Models', status: 'completed', confidence: 5, hoursSpent: 3.0, notes: 'Encapsulation & layers.' },
+    { id: 'ch-17', examId: 'ex-5', title: 'Chapter 2: Routing Protocols (BGP, OSPF)', status: 'in_progress', confidence: 3, hoursSpent: 4.0, notes: 'Distance vector vs link state.' }
   ]);
 
   const toggleChapterStatus = (chId) => {
@@ -148,16 +176,6 @@ export default function ExamPrepPage() {
           <h1 className="text-3xl font-display font-bold tracking-tight">Exam Prep & Syllabus Tracker</h1>
           <p className="text-sm opacity-70 mt-1">Manage exam countdowns, syllabus mastery chapters, and confidence metrics.</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#9f5960] transition-colors cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>Add New Exam</span>
-          </button>
-        </div>
       </div>
 
       {/* Exam Selector Cards */}
@@ -224,29 +242,13 @@ export default function ExamPrepPage() {
       {/* Main Content Card */}
       <div className={`rounded-2xl border p-6 ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3]'}`}>
 
-        {/* Tab & Search Bar */}
+        {/* Search Bar & Header */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-inherit">
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <button
-              onClick={() => setActiveTab('syllabus')}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === 'syllabus'
-                  ? 'bg-[#B46A72] text-white shadow-sm'
-                  : isDark ? 'bg-[#3B1319]/50 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
-              }`}
-            >
-              Syllabus Checklist ({completedCount}/{totalCount})
-            </button>
-            <button
-              onClick={() => setActiveTab('confidence')}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === 'confidence'
-                  ? 'bg-[#B46A72] text-white shadow-sm'
-                  : isDark ? 'bg-[#3B1319]/50 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
-              }`}
-            >
-              Confidence Ratings ({avgConfidence}/5 avg)
-            </button>
+          <div className="flex items-center gap-2">
+            <h3 className="font-display font-bold text-lg">Syllabus & Confidence Checklist</h3>
+            <span className="text-xs px-2.5 py-1 rounded-full bg-[#B46A72]/15 text-[#B46A72] font-semibold">
+              {completedCount}/{totalCount} Completed • {avgConfidence}/5 Avg Conf
+            </span>
           </div>
 
           <div className="relative w-full md:w-72">
@@ -345,103 +347,6 @@ export default function ExamPrepPage() {
           )}
         </div>
       </div>
-
-      {/* Add Exam Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <form
-            onSubmit={handleAddExam}
-            className={`w-full max-w-lg p-6 rounded-3xl border shadow-2xl ${isDark ? 'bg-[#280B0F] border-[#3B1319] text-[#C6B39A]' : 'bg-white border-[#F7C8D3] text-[#2D3A47]'}`}
-          >
-            <div className="flex items-center justify-between mb-5 pb-3 border-b border-inherit">
-              <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                <GraduationCap className="text-[#B46A72]" size={20} />
-                <span>Add New Exam & Syllabus</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-lg opacity-60 hover:opacity-100 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Exam Title</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Advanced Operating Systems Final"
-                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none ${
-                    isDark ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A]' : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
-                  }`}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Subject</label>
-                  <input
-                    type="text"
-                    required
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
-                    placeholder="e.g. Operating Systems"
-                    className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none ${
-                      isDark ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A]' : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
-                    }`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Exam Date</label>
-                  <input
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none ${
-                      isDark ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A]' : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Number of Chapters</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={newChaptersCount}
-                  onChange={(e) => setNewChaptersCount(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none ${
-                    isDark ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A]' : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-inherit">
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-sm font-semibold opacity-70 hover:opacity-100 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#9f5960] transition-colors cursor-pointer"
-              >
-                Create Exam Tracker
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
     </div>
   );
