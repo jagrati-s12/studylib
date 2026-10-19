@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import FloatingPomodoroMini from './FloatingPomodoroMini';
 
 export function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -18,6 +19,7 @@ export function AppLayout() {
       >
         <Outlet />
       </main>
+      <FloatingPomodoroMini />
     </div>
   );
 }

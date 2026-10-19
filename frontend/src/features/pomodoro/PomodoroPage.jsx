@@ -1,71 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Timer, Flame, CheckCircle2, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { usePomodoro } from '@/context/PomodoroContext';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function PomodoroPage() {
   const { isDark } = useTheme();
-
-  // Pomodoro timer states
-  const [mode, setMode] = useState('pomodoro'); // 'pomodoro' | 'shortBreak' | 'longBreak'
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(4);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // Custom durations (in seconds)
-  const durations = {
-    pomodoro: 25 * 60,
-    shortBreak: 5 * 60,
-    longBreak: 15 * 60,
-  };
-
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            if (mode === 'pomodoro') {
-              setSessionsCompleted((c) => c + 1);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning, mode]);
-
-  const switchMode = (newMode) => {
-    setIsRunning(false);
-    setMode(newMode);
-    setTimeLeft(durations[newMode]);
-  };
-
-  const toggleTimer = () => {
-    setIsRunning((prev) => !prev);
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTimeLeft(durations[mode]);
-  };
-
-  // Format time mm:ss
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-  const totalTime = durations[mode];
-  const progressPercent = ((totalTime - timeLeft) / totalTime) * 100;
+  const {
+    mode,
+    timeLeft,
+    isRunning,
+    sessionsCompleted,
+    soundEnabled,
+    setSoundEnabled,
+    switchMode,
+    toggleTimer,
+    resetTimer,
+    formattedTime,
+    progressPercent,
+  } = usePomodoro();
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8 animate-fade-in">
