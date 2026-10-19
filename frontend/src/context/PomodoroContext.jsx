@@ -10,7 +10,14 @@ const DURATIONS = {
 
 export function PomodoroProvider({ children }) {
   const [mode, setMode] = useState('pomodoro'); // 'pomodoro' | 'shortBreak' | 'longBreak'
-  const [timeLeft, setTimeLeft] = useState(DURATIONS.pomodoro);
+
+  // Store individual timer states so switching modes/tabs doesn't reset active timers unless resetTimer() is called
+  const [times, setTimes] = useState({
+    pomodoro: DURATIONS.pomodoro,
+    shortBreak: DURATIONS.shortBreak,
+    longBreak: DURATIONS.longBreak,
+  });
+
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(4);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -18,18 +25,21 @@ export function PomodoroProvider({ children }) {
 
   const timerRef = useRef(null);
 
+  const timeLeft = times[mode];
+
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
+        setTimes((prevTimes) => {
+          const currentModeTime = prevTimes[mode];
+          if (currentModeTime <= 1) {
             setIsRunning(false);
             if (mode === 'pomodoro') {
               setSessionsCompleted((c) => c + 1);
             }
-            return 0;
+            return { ...prevTimes, [mode]: 0 };
           }
-          return prev - 1;
+          return { ...prevTimes, [mode]: currentModeTime - 1 };
         });
       }, 1000);
     } else {
@@ -41,9 +51,12 @@ export function PomodoroProvider({ children }) {
   }, [isRunning, mode]);
 
   const switchMode = (newMode) => {
-    setIsRunning(false);
+    // Break can only start when study focus is stopped (or if switching between breaks, etc.)
+    // If we are currently running a focus session and trying to switch to a break, or vice versa, enforce rules:
+    if (isRunning) {
+      return; // Can't switch mode while timer is actively running
+    }
     setMode(newMode);
-    setTimeLeft(DURATIONS[newMode]);
     setMiniDismissed(false);
   };
 
@@ -54,7 +67,10 @@ export function PomodoroProvider({ children }) {
 
   const resetTimer = () => {
     setIsRunning(false);
-    setTimeLeft(DURATIONS[mode]);
+    setTimes((prev) => ({
+      ...prev,
+      [mode]: DURATIONS[mode],
+    }));
   };
 
   const totalTime = DURATIONS[mode];

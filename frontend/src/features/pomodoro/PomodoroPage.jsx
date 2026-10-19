@@ -67,7 +67,7 @@ export default function PomodoroPage() {
         }`}
       >
         {/* Mode Selector Tabs */}
-        <div className="inline-flex p-1.5 rounded-2xl bg-black/10 dark:bg-black/30 mb-8 backdrop-blur-sm">
+        <div className="inline-flex p-1.5 rounded-2xl bg-black/10 dark:bg-black/30 mb-8 backdrop-blur-sm gap-1">
           <button
             type="button"
             onClick={() => switchMode('pomodoro')}
@@ -82,26 +82,40 @@ export default function PomodoroPage() {
           <button
             type="button"
             onClick={() => switchMode('shortBreak')}
+            disabled={isRunning && mode === 'pomodoro'}
             className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              isRunning && mode === 'pomodoro' ? 'opacity-40 cursor-not-allowed' : ''
+            } ${
               mode === 'shortBreak'
                 ? 'bg-[#B46A72] text-white shadow-md'
                 : 'opacity-70 hover:opacity-100'
             }`}
+            title={isRunning && mode === 'pomodoro' ? 'Pause focus session before starting a break' : ''}
           >
             Short Break (5m)
           </button>
           <button
             type="button"
             onClick={() => switchMode('longBreak')}
+            disabled={isRunning && mode === 'pomodoro'}
             className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              isRunning && mode === 'pomodoro' ? 'opacity-40 cursor-not-allowed' : ''
+            } ${
               mode === 'longBreak'
                 ? 'bg-[#B46A72] text-white shadow-md'
                 : 'opacity-70 hover:opacity-100'
             }`}
+            title={isRunning && mode === 'pomodoro' ? 'Pause focus session before starting a break' : ''}
           >
             Long Break (15m)
           </button>
         </div>
+
+        {isRunning && (
+          <div className="text-xs text-amber-500 font-semibold mb-4">
+            ⚠️ Timer is active. Pause or stop to switch modes.
+          </div>
+        )}
 
         {/* Big Countdown Display */}
         <div className="my-6 relative">
@@ -122,7 +136,7 @@ export default function PomodoroPage() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
           <button
             type="button"
             onClick={toggleTimer}
@@ -134,11 +148,11 @@ export default function PomodoroPage() {
           >
             {isRunning ? (
               <>
-                <Pause size={20} /> Pause Focus
+                <Pause size={20} /> Pause {mode === 'pomodoro' ? 'Focus' : 'Break'}
               </>
             ) : (
               <>
-                <Play size={20} /> Start Focus
+                <Play size={20} /> Resume / Start {mode === 'pomodoro' ? 'Focus' : 'Break'}
               </>
             )}
           </button>
@@ -146,14 +160,14 @@ export default function PomodoroPage() {
           <button
             type="button"
             onClick={resetTimer}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`px-6 py-4 rounded-2xl font-bold text-base border transition-all cursor-pointer flex items-center gap-2 ${
               isDark
                 ? 'border-[#7B694E]/40 hover:bg-[#3B1319] text-[#C6B39A]'
                 : 'border-[#2D3A47]/20 hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
             }`}
             title="Reset timer"
           >
-            <RotateCcw size={20} />
+            <RotateCcw size={18} /> Reset Timer
           </button>
         </div>
       </div>
