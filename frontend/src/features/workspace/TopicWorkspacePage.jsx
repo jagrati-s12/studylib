@@ -81,7 +81,7 @@ export function TopicWorkspacePage() {
   const [folders, setFolders] = useState([]);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [showWorkspace, setShowWorkspace] = useState(true);
+  const [showWorkspace, setShowWorkspace] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [digitalNote, setDigitalNote] = useState(null);
   const [loading, setLoading] = useState(true);

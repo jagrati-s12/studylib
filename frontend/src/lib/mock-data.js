@@ -365,8 +365,8 @@ function hydrate() {
 }
 hydrate();
 
-// Simulated API delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Instant API response (no artificial delay)
+const delay = () => Promise.resolve();
 
 export const mockApi = {
   // Subjects

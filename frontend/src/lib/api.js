@@ -2,8 +2,18 @@ import { mockApi } from './mock-data.js';
 
 const API_BASE = (import.meta.env && import.meta.env.VITE_API_URL) || 'http://localhost:5000/api';
 
-// Safe fetch wrapper with timeout and automatic mock fallback
-async function safeFetch(endpoint, options = {}, timeoutMs = 3000) {
+// Fast backend liveness tracker to eliminate network timeouts when offline
+let isBackendAlive = null;
+let lastCheckTime = 0;
+const CHECK_INTERVAL = 15000; // 15 seconds
+
+// Safe fetch wrapper with fast timeout and automatic instant mock fallback
+async function safeFetch(endpoint, options = {}, timeoutMs = 600) {
+  // If backend was checked and found offline recently, fail fast instantly (0ms)
+  if (isBackendAlive === false && Date.now() - lastCheckTime < CHECK_INTERVAL) {
+    throw new Error('Backend is currently offline, using instant local cache');
+  }
+
   const token = localStorage.getItem('notie_token');
   const headers = {
     ...(options.headers || {}),
@@ -33,11 +43,16 @@ async function safeFetch(endpoint, options = {}, timeoutMs = 3000) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
 
+    isBackendAlive = true;
+    lastCheckTime = Date.now();
     const data = await res.json();
     return data;
   } catch (err) {
     clearTimeout(id);
-    throw err; // Let caller fallback to mockApi
+    // Mark backend as offline so subsequent concurrent calls resolve in 0ms
+    isBackendAlive = false;
+    lastCheckTime = Date.now();
+    throw err; // Let caller fallback to mockApi instantly
   }
 }
 

@@ -926,7 +926,8 @@ export default function NotesPage() {
                         const existingSubs = topics.filter(
                           (t) => t.parent_topic_id === subtopicParent.id || t.parentTopicId === subtopicParent.id
                         );
-                        const nextSerialNum = Number((subtopicParent.serial_number + (existingSubs.length + 1) * 0.1).toFixed(1));
+                        const baseSerial = Math.floor(subtopicParent.serial_number);
+                        const nextSerialNum = Number((baseSerial + (existingSubs.length + 1) * 0.1).toFixed(1));
                         try {
                           const created = await api.createTopic(activeSubject.id, {
                             serial_number: nextSerialNum,
@@ -958,12 +959,14 @@ export default function NotesPage() {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={async () => {
                     if (!newSubtopicTitle.trim()) return;
                     const existingSubs = topics.filter(
                       (t) => t.parent_topic_id === subtopicParent.id || t.parentTopicId === subtopicParent.id
                     );
-                    const nextSerialNum = Number((subtopicParent.serial_number + (existingSubs.length + 1) * 0.1).toFixed(1));
+                    const baseSerial = Math.floor(subtopicParent.serial_number);
+                    const nextSerialNum = Number((baseSerial + (existingSubs.length + 1) * 0.1).toFixed(1));
                     try {
                       const created = await api.createTopic(activeSubject.id, {
                         serial_number: nextSerialNum,
@@ -981,7 +984,7 @@ export default function NotesPage() {
                     }
                   }}
                   disabled={!newSubtopicTitle.trim()}
-                  className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-55"
                 >
                   Add Subtopic
                 </button>
@@ -1246,22 +1249,8 @@ export default function NotesPage() {
                   }`}
                   autoFocus
                   onKeyDown={async (e) => {
-                    if (e.key === 'Enter' && newTopicTitle.trim() && activeSubject) {
+                    if (e.key === 'Enter') {
                       e.preventDefault();
-                      try {
-                        const nextSerial = topics.length + 1;
-                        const created = await api.createTopic(activeSubject.id, {
-                          serial_number: nextSerial,
-                          title: newTopicTitle.trim(),
-                          status: 'todo',
-                          tags: ['#chapter'],
-                        });
-                        setTopics((prev) => [...prev, created]);
-                        setNewTopicTitle('');
-                        setShowNewTopicModal(false);
-                      } catch (err) {
-                        console.error('Failed to create topic:', err);
-                      }
                     }
                   }}
                 />
