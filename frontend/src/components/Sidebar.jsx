@@ -1,4 +1,4 @@
-﻿import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   ListTodo,
   Calendar,
@@ -14,18 +14,30 @@ import {
   GraduationCap,
   BookMarked,
   BarChart2,
+  LogOut,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, isNotion } = useTheme();
+
+  const handleLogout = () => {
+    if (confirm('Are you sure you want to log out of Notie?')) {
+      localStorage.removeItem('notie_auth');
+      window.location.href = '/login';
+    }
+  };
 
   return (
     <aside
       className={`fixed top-0 bottom-0 left-0 z-30 flex flex-col h-screen transition-all duration-300 select-none border-r ${
-        isDark
-          ? 'bg-[#280B0F] border-[#3B1319] text-[#C6B39A]'
-          : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
+        isNotion
+          ? isDark
+            ? 'bg-[#202020] border-[#373737] text-[#D4D4D4]'
+            : 'bg-[#F7F7F5] border-[#E9E9E7] text-[#37352F]'
+          : isDark
+            ? 'bg-[#280B0F] border-[#3B1319] text-[#C6B39A]'
+            : 'bg-[#FFF5F6] border-[#F7C8D3] text-[#2D3A47]'
       } ${collapsed ? 'w-18' : 'w-64'}`}
     >
       {/* Brand & Badge Header */}
@@ -42,9 +54,13 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
                 </span>
                 <span
                   className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                    isDark
-                      ? 'bg-[#3B1319] text-[#C6B39A] border-[#7B694E]/40'
-                      : 'bg-[#F7C8D3]/50 text-[#B46A72] border-[#F7C8D3]'
+                    isNotion
+                      ? isDark
+                        ? 'bg-[#252525] text-[#9B9A97] border-[#373737]'
+                        : 'bg-[#EFEFED] text-[#787774] border-[#E9E9E7]'
+                      : isDark
+                        ? 'bg-[#3B1319] text-[#C6B39A] border-[#7B694E]/40'
+                        : 'bg-[#F7C8D3]/50 text-[#B46A72] border-[#F7C8D3]'
                   }`}
                 >
                   Tasks {topicCount}
@@ -63,7 +79,13 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
             type="button"
             onClick={onToggle}
             className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? 'hover:bg-[#3B1319] text-[#C6B39A]' : 'hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
+              isNotion
+                ? isDark
+                  ? 'hover:bg-[#2F2F2F] text-[#D4D4D4]'
+                  : 'hover:bg-[#EFEFED] text-[#37352F]'
+                : isDark
+                  ? 'hover:bg-[#3B1319] text-[#C6B39A]'
+                  : 'hover:bg-[#F7C8D3]/30 text-[#2D3A47]'
             }`}
             title="Collapse sidebar"
           >
@@ -205,18 +227,32 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={toggleTheme}
-            title={isDark ? 'Switch to Light Mood (Vanilla Cream)' : 'Switch to Dark Mood (Italian Roast)'}
-            className={`p-2 rounded-xl transition-all ${
-              isDark
-                ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#7B694E]/40'
-                : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
-            }`}
-          >
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Log out"
+              className={`p-2 rounded-xl transition-all ${
+                isDark
+                  ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-rose-500/20 hover:text-rose-400'
+                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-rose-500/10 hover:text-rose-500'
+              }`}
+            >
+              <LogOut size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light Mood (Vanilla Cream)' : 'Switch to Dark Mood (Italian Roast)'}
+              className={`p-2 rounded-xl transition-all ${
+                isDark
+                  ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#7B694E]/40'
+                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
+              }`}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </div>
         </div>
 
         {collapsed && onToggle && (
