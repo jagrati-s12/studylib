@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { api } from '@/lib/api';
 import {
   GraduationCap,
   BookOpen,
@@ -15,62 +16,12 @@ import {
 export default function ExamPrepPage() {
   const { isDark } = useTheme();
 
-  // Mock exams data with state handlers (all subjects from Notes)
-  const [exams, setExams] = useState([
-    {
-      id: 'ex-1',
-      title: 'Advanced Data Mining & KDD Certification',
-      subject: 'Data Mining',
-      date: '2026-11-15',
-      totalChapters: 8,
-      completedChapters: 5,
-      confidence: 80,
-      status: 'upcoming'
-    },
-    {
-      id: 'ex-2',
-      title: 'Machine Learning Mid-Term Exam',
-      subject: 'Machine Learning',
-      date: '2026-11-28',
-      totalChapters: 12,
-      completedChapters: 7,
-      confidence: 65,
-      status: 'upcoming'
-    },
-    {
-      id: 'ex-3',
-      title: 'Database Systems Final Exam',
-      subject: 'Database Systems',
-      date: '2026-12-10',
-      totalChapters: 6,
-      completedChapters: 6,
-      confidence: 95,
-      status: 'completed'
-    },
-    {
-      id: 'ex-4',
-      title: 'Operating Systems Certification',
-      subject: 'Operating Systems',
-      date: '2026-12-18',
-      totalChapters: 10,
-      completedChapters: 4,
-      confidence: 70,
-      status: 'upcoming'
-    },
-    {
-      id: 'ex-5',
-      title: 'Computer Networks Comprehensive Exam',
-      subject: 'Computer Networks',
-      date: '2027-01-10',
-      totalChapters: 9,
-      completedChapters: 3,
-      confidence: 60,
-      status: 'upcoming'
-    }
-  ]);
+  const [exams, setExams] = useState([]);
+  const [chapters, setChapters] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState('syllabus'); // 'syllabus' | 'confidence'
-  const [selectedExamId, setSelectedExamId] = useState('ex-1');
+  const [selectedExamId, setSelectedExamId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -80,30 +31,79 @@ export default function ExamPrepPage() {
   const [newDate, setNewDate] = useState('');
   const [newChaptersCount, setNewChaptersCount] = useState(6);
 
-  // Syllabus tracker chapters
-  const [chapters, setChapters] = useState([
-    { id: 'ch-1', examId: 'ex-1', title: 'Chapter 1: Introduction to KDD & Data Preprocessing', status: 'completed', confidence: 5, hoursSpent: 4.5, notes: 'Normalization & imputation.' },
-    { id: 'ch-2', examId: 'ex-1', title: 'Chapter 2: Exploratory Data Analysis & Statistics', status: 'completed', confidence: 4, hoursSpent: 3.0, notes: 'Variance & covariance.' },
-    { id: 'ch-3', examId: 'ex-1', title: 'Chapter 3: Classification - Decision Trees & Naive Bayes', status: 'completed', confidence: 4, hoursSpent: 6.0, notes: 'Gini impurity & entropy.' },
-    { id: 'ch-4', examId: 'ex-1', title: 'Chapter 4: Advanced Classification - SVMs & Neural Nets', status: 'in_progress', confidence: 3, hoursSpent: 5.5, notes: 'Kernel tricks.' },
-    { id: 'ch-5', examId: 'ex-1', title: 'Chapter 5: Association Rule Mining (Apriori & FP-Growth)', status: 'in_progress', confidence: 3, hoursSpent: 4.0, notes: 'Support & confidence.' },
-    { id: 'ch-6', examId: 'ex-1', title: 'Chapter 6: Cluster Analysis (K-Means, DBSCAN)', status: 'not_started', confidence: 2, hoursSpent: 0, notes: 'Pending.' },
-    { id: 'ch-7', examId: 'ex-1', title: 'Chapter 7: Outlier Detection & Anomaly Mining', status: 'not_started', confidence: 1, hoursSpent: 0, notes: 'Pending.' },
-    { id: 'ch-8', examId: 'ex-1', title: 'Chapter 8: Mining Data Streams & Graph Mining', status: 'not_started', confidence: 1, hoursSpent: 0, notes: 'Pending.' },
-    // Exam 2 chapters (Machine Learning)
-    { id: 'ch-9', examId: 'ex-2', title: 'Chapter 1: Linear Regression & Cost Functions', status: 'completed', confidence: 5, hoursSpent: 3.5, notes: 'Gradient descent.' },
-    { id: 'ch-10', examId: 'ex-2', title: 'Chapter 2: Logistic Regression & Regularization', status: 'completed', confidence: 4, hoursSpent: 4.0, notes: 'L1 & L2 penalties.' },
-    { id: 'ch-11', examId: 'ex-2', title: 'Chapter 3: Neural Networks & Backpropagation', status: 'in_progress', confidence: 3, hoursSpent: 5.0, notes: 'Activation functions.' },
-    // Exam 3 chapters (Database Systems)
-    { id: 'ch-12', examId: 'ex-3', title: 'Chapter 1: Relational Algebra & SQL Optimization', status: 'completed', confidence: 5, hoursSpent: 5.0, notes: 'Execution plans.' },
-    { id: 'ch-13', examId: 'ex-3', title: 'Chapter 2: Transactions, ACID & Concurrency Control', status: 'completed', confidence: 5, hoursSpent: 4.0, notes: 'Two-phase locking.' },
-    // Exam 4 chapters (Operating Systems)
-    { id: 'ch-14', examId: 'ex-4', title: 'Chapter 1: Processes, Threads & CPU Scheduling', status: 'completed', confidence: 4, hoursSpent: 4.5, notes: 'Round robin & SJF.' },
-    { id: 'ch-15', examId: 'ex-4', title: 'Chapter 2: Synchronization, Semaphores & Deadlocks', status: 'in_progress', confidence: 3, hoursSpent: 3.5, notes: 'Bankers algorithm.' },
-    // Exam 5 chapters (Computer Networks)
-    { id: 'ch-16', examId: 'ex-5', title: 'Chapter 1: OSI & TCP/IP Reference Models', status: 'completed', confidence: 5, hoursSpent: 3.0, notes: 'Encapsulation & layers.' },
-    { id: 'ch-17', examId: 'ex-5', title: 'Chapter 2: Routing Protocols (BGP, OSPF)', status: 'in_progress', confidence: 3, hoursSpent: 4.0, notes: 'Distance vector vs link state.' }
-  ]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const subjects = await api.getSubjects();
+        const allTopics = await api.getAllTopics();
+
+        // Build exams for every subject in Notes
+        const generatedExams = subjects.map((sub, index) => {
+          const subTopics = allTopics.filter(t => t.subject_id === sub.id);
+          const compCount = subTopics.filter(t => t.status === 'done' || t.status === 'completed').length;
+          const totCount = subTopics.length || 5;
+          const avgConf = subTopics.length > 0 ? Math.round(subTopics.reduce((acc, curr) => acc + (curr.confidence || 4), 0) / subTopics.length) : 4;
+
+          return {
+            id: `ex-${sub.id}`,
+            subjectId: sub.id,
+            title: `${sub.name} Comprehensive Certification & Final Exam`,
+            subject: sub.name,
+            date: `2026-12-${String(10 + index).padStart(2, '0')}`,
+            totalChapters: totCount,
+            completedChapters: compCount,
+            confidence: avgConf * 20, // percentage for display
+            status: index === 2 ? 'completed' : 'upcoming'
+          };
+        });
+
+        // Build chapters corresponding to topics for each subject
+        const generatedChapters = [];
+        subjects.forEach(sub => {
+          const subTopics = allTopics.filter(t => t.subject_id === sub.id);
+          const exId = `ex-${sub.id}`;
+
+          if (subTopics.length > 0) {
+            subTopics.forEach((t, i) => {
+              generatedChapters.push({
+                id: `ch-${t.id}`,
+                examId: exId,
+                title: `Chapter ${t.serial_number || i + 1}: ${t.title}`,
+                status: t.status === 'done' ? 'completed' : t.status === 'in_progress' ? 'in_progress' : 'not_started',
+                confidence: t.confidence || ((i % 3) + 3),
+                hoursSpent: (i + 1) * 1.5,
+                notes: t.note || 'Syllabus chapter notes.'
+              });
+            });
+          } else {
+            // Fallback default chapters if subject has no topics
+            for (let i = 1; i <= 5; i++) {
+              generatedChapters.push({
+                id: `ch-${sub.id}-${i}`,
+                examId: exId,
+                title: `Chapter ${i}: Core Principles & Practice`,
+                status: i === 1 ? 'completed' : 'not_started',
+                confidence: 4,
+                hoursSpent: i * 2,
+                notes: 'Fundamental concepts.'
+              });
+            }
+          }
+        });
+
+        setExams(generatedExams);
+        setChapters(generatedChapters);
+        if (generatedExams.length > 0) {
+          setSelectedExamId(generatedExams[0].id);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load exam prep data from notes:', err);
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const toggleChapterStatus = (chId) => {
     setChapters(prev => prev.map(ch => {
@@ -135,7 +135,6 @@ export default function ExamPrepPage() {
       status: 'upcoming'
     };
 
-    // Create initial chapters for this exam
     const generatedChapters = Array.from({ length: Number(newChaptersCount) || 5 }, (_, i) => ({
       id: `ch-${Date.now()}-${i}`,
       examId: newExId,
@@ -161,7 +160,18 @@ export default function ExamPrepPage() {
 
   const completedCount = examChapters.filter(ch => ch.status === 'completed').length;
   const totalCount = examChapters.length;
-  const avgConfidence = totalCount > 0 ? Math.round(examChapters.reduce((acc, curr) => acc + curr.confidence, 0) / totalCount) : 0;
+  const avgConfidence = totalCount > 0 ? (examChapters.reduce((acc, curr) => acc + curr.confidence, 0) / totalCount).toFixed(1) : 0;
+
+  if (loading) {
+    return (
+      <div className={`flex-1 min-h-screen p-8 flex items-center justify-center ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'}`}>
+        <div className="text-center">
+          <GraduationCap size={40} className="animate-bounce mx-auto mb-3 text-[#B46A72]" />
+          <p className="font-semibold text-lg">Syncing exam prep with all Notes subjects...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex-1 min-h-screen p-8 transition-colors ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'}`}>
@@ -174,18 +184,19 @@ export default function ExamPrepPage() {
             <span>Academic Excellence</span>
           </div>
           <h1 className="text-3xl font-display font-bold tracking-tight">Exam Prep & Syllabus Tracker</h1>
-          <p className="text-sm opacity-70 mt-1">Manage exam countdowns, syllabus mastery chapters, and confidence metrics.</p>
+          <p className="text-sm opacity-70 mt-1">Synchronized with every subject in Notes: track exam countdowns, syllabus mastery, and confidence metrics.</p>
         </div>
       </div>
 
       {/* Exam Selector Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
         {exams.map(exam => {
           const isSelected = exam.id === selectedExamId;
           const exChs = chapters.filter(c => c.examId === exam.id);
           const compChs = exChs.filter(c => c.status === 'completed').length;
           const totChs = exChs.length || 1;
           const pct = Math.round((compChs / totChs) * 100);
+          const avgStar = exChs.length > 0 ? (exChs.reduce((a, b) => a + (b.confidence || 3), 0) / exChs.length).toFixed(1) : 0;
 
           return (
             <div
@@ -232,7 +243,7 @@ export default function ExamPrepPage() {
 
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
                 <span>{compChs}/{exChs.length} Chapters</span>
-                <span className="font-semibold text-[#B46A72]">Avg Conf: {Math.round(exChs.reduce((a,b)=>a+b.confidence,0)/(exChs.length||1))}/5</span>
+                <span className="font-semibold text-[#B46A72]">Avg Conf: {avgStar}/5</span>
               </div>
             </div>
           );
@@ -245,7 +256,9 @@ export default function ExamPrepPage() {
         {/* Search Bar & Header */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-inherit">
           <div className="flex items-center gap-2">
-            <h3 className="font-display font-bold text-lg">Syllabus & Confidence Checklist</h3>
+            <h3 className="font-display font-bold text-lg">
+              {currentExam ? `${currentExam.subject} Syllabus Checklist` : 'Syllabus Checklist'}
+            </h3>
             <span className="text-xs px-2.5 py-1 rounded-full bg-[#B46A72]/15 text-[#B46A72] font-semibold">
               {completedCount}/{totalCount} Completed • {avgConfidence}/5 Avg Conf
             </span>
@@ -351,3 +364,4 @@ export default function ExamPrepPage() {
     </div>
   );
 }
+
