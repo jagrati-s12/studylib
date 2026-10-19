@@ -140,8 +140,8 @@ export function TopicWorkspacePage() {
             setPanelIds(['digital-notes', null, null, null]);
           }
 
-          // Open the study workspace immediately so student can read and take notes
-          setShowWorkspace(true);
+          // Default to showing Files & Folders first as requested
+          setShowWorkspace(false);
           setLoading(false);
         },
       )
