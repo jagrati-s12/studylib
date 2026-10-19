@@ -1,4 +1,4 @@
-﻿// Mock data for development before the backend is connected
+// Mock data for development before the backend is connected
 
 
 
@@ -440,15 +440,18 @@ export const mockApi = {
     subjectId,
     data
   ) {
-    await delay(300);
+    await delay(150);
     const topics = mockTopics[subjectId] ?? [];
-    if (!data.parent_topic_id && topics.some(topic => !topic.parent_topic_id && topic.serial_number === data.serial_number)) {
+    const parentId = data.parent_topic_id || data.parentTopicId || null;
+    if (!parentId && topics.some(topic => (!topic.parent_topic_id && !topic.parentTopicId) && topic.serial_number === data.serial_number)) {
       throw new Error('That index number already exists in this subject.');
     }
     const topic = {
       id: `top-${Date.now()}`,
       subject_id: subjectId,
+      subjectId: subjectId,
       serial_number: data.serial_number,
+      serialNumber: data.serial_number,
       title: data.title,
       sort_order: topics.length,
       material_count: 0,
@@ -457,13 +460,10 @@ export const mockApi = {
       tags: data.tags ?? ['#study'],
       progress: data.status === 'done' ? 100 : 0,
       checklist: data.checklist ?? [],
-      note: data.note,
-      due_date: data.due_date,
-      subject_id_ref: data.subject_id_ref,
-      topic_id_ref: data.topic_id_ref,
-      referenced_subject_name: data.referenced_subject_name,
-      referenced_topic_title: data.referenced_topic_title,
-      parent_topic_id: data.parent_topic_id ?? null,
+      note: data.note || '',
+      due_date: data.due_date || null,
+      parent_topic_id: parentId,
+      parentTopicId: parentId,
     };
     if (!mockTopics[subjectId]) mockTopics[subjectId] = [];
     mockTopics[subjectId].push(topic);

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function ExamPrepPage() {
-  const { isDark } = useTheme();
+  const { isDark, isNotion } = useTheme();
 
   const [exams, setExams] = useState([]);
   const [chapters, setChapters] = useState([]);
@@ -164,9 +164,13 @@ export default function ExamPrepPage() {
 
   if (loading) {
     return (
-      <div className={`flex-1 min-h-screen p-8 flex items-center justify-center ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'}`}>
+      <div className={`flex-1 min-h-screen p-8 flex items-center justify-center ${
+        isNotion
+          ? isDark ? 'bg-[#191919] text-[#D4D4D4]' : 'bg-[#FFFFFF] text-[#37352F]'
+          : isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'
+      }`}>
         <div className="text-center">
-          <GraduationCap size={40} className="animate-bounce mx-auto mb-3 text-[#B46A72]" />
+          <GraduationCap size={40} className={`animate-bounce mx-auto mb-3 ${isNotion ? (isDark ? 'text-white' : 'text-[#37352F]') : 'text-[#B46A72]'}`} />
           <p className="font-semibold text-lg">Syncing exam prep with all Notes subjects...</p>
         </div>
       </div>
@@ -174,12 +178,18 @@ export default function ExamPrepPage() {
   }
 
   return (
-    <div className={`flex-1 min-h-screen p-8 transition-colors ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'}`}>
+    <div className={`flex-1 min-h-screen p-8 transition-colors ${
+      isNotion
+        ? isDark ? 'bg-[#191919] text-[#D4D4D4]' : 'bg-[#FFFFFF] text-[#37352F]'
+        : isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'
+    }`}>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 text-[#B46A72]">
+          <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 ${
+            isNotion ? (isDark ? 'text-[#D4D4D4]' : 'text-[#37352F]') : 'text-[#B46A72]'
+          }`}>
             <GraduationCap size={16} />
             <span>Academic Excellence</span>
           </div>
@@ -204,10 +214,18 @@ export default function ExamPrepPage() {
               onClick={() => setSelectedExamId(exam.id)}
               className={`p-5 rounded-2xl border cursor-pointer transition-all ${
                 isSelected
-                  ? isDark
+                  ? isNotion
+                    ? isDark
+                      ? 'bg-[#252525] border-[#D4D4D4] shadow-lg ring-1 ring-[#D4D4D4]'
+                      : 'bg-white border-[#37352F] shadow-md ring-2 ring-[#37352F]/10'
+                    : isDark
                     ? 'bg-[#3B1319] border-[#B46A72] shadow-lg ring-1 ring-[#B46A72]'
                     : 'bg-white border-[#B46A72] shadow-md ring-2 ring-[#B46A72]/30'
-                  : isDark
+                  : isNotion
+                    ? isDark
+                      ? 'bg-[#202020] border-[#373737] hover:border-[#D4D4D4]/40'
+                      : 'bg-white border-[#E9E9E7] hover:border-[#37352F]/30 shadow-sm'
+                    : isDark
                     ? 'bg-[#280B0F]/60 border-[#3B1319] hover:border-[#7B694E]/50'
                     : 'bg-white/80 border-[#F7C8D3] hover:border-[#B46A72]/50'
               }`}
@@ -215,7 +233,9 @@ export default function ExamPrepPage() {
               <div className="flex items-start justify-between mb-3">
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${
                   exam.status === 'upcoming'
-                    ? 'bg-[#B46A72]/10 text-[#B46A72] border border-[#B46A72]/30'
+                    ? isNotion
+                      ? 'bg-[#2383E2]/10 text-[#2383E2] border border-[#2383E2]/30'
+                      : 'bg-[#B46A72]/10 text-[#B46A72] border border-[#B46A72]/30'
                     : 'bg-[#A8B58A]/20 text-[#6B7C50] border border-[#A8B58A]/40'
                 }`}>
                   {exam.subject}
@@ -233,9 +253,11 @@ export default function ExamPrepPage() {
                   <span>Syllabus Covered</span>
                   <span>{pct}%</span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-black/10 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-black/10 dark:bg-black/30 overflow-hidden">
                   <div
-                    className="h-full bg-[#B46A72] rounded-full transition-all"
+                    className={`h-full rounded-full transition-all ${
+                      isNotion ? (isDark ? 'bg-[#D4D4D4]' : 'bg-[#37352F]') : 'bg-[#B46A72]'
+                    }`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -243,7 +265,7 @@ export default function ExamPrepPage() {
 
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
                 <span>{compChs}/{exChs.length} Chapters</span>
-                <span className="font-semibold text-[#B46A72]">Avg Conf: {avgStar}/5</span>
+                <span className={`font-semibold ${isNotion ? '' : 'text-[#B46A72]'}`}>Avg Conf: {avgStar}/5</span>
               </div>
             </div>
           );
@@ -251,7 +273,11 @@ export default function ExamPrepPage() {
       </div>
 
       {/* Main Content Card */}
-      <div className={`rounded-2xl border p-6 ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3]'}`}>
+      <div className={`rounded-2xl border p-6 ${
+        isNotion
+          ? isDark ? 'bg-[#202020] border-[#373737]' : 'bg-white border-[#E9E9E7] shadow-sm'
+          : isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3]'
+      }`}>
 
         {/* Search Bar & Header */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-inherit">
@@ -259,7 +285,11 @@ export default function ExamPrepPage() {
             <h3 className="font-display font-bold text-lg">
               {currentExam ? `${currentExam.subject} Syllabus Checklist` : 'Syllabus Checklist'}
             </h3>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-[#B46A72]/15 text-[#B46A72] font-semibold">
+            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+              isNotion
+                ? isDark ? 'bg-[#252525] text-[#D4D4D4] border border-[#373737]' : 'bg-[#EFEFED] text-[#37352F] border border-[#E9E9E7]'
+                : 'bg-[#B46A72]/15 text-[#B46A72]'
+            }`}>
               {completedCount}/{totalCount} Completed • {avgConfidence}/5 Avg Conf
             </span>
           </div>
@@ -272,9 +302,13 @@ export default function ExamPrepPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border outline-none transition-all ${
-                isDark
-                  ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A] focus:border-[#B46A72]'
-                  : 'bg-[#FFF5F6]/50 border-[#F7C8D3] text-[#2D3A47] focus:border-[#B46A72]'
+                isNotion
+                  ? isDark
+                    ? 'bg-[#191919] border-[#373737] text-[#D4D4D4] focus:border-[#D4D4D4]'
+                    : 'bg-white border-[#E9E9E7] text-[#37352F] focus:border-[#37352F]'
+                  : isDark
+                    ? 'bg-[#1E080C] border-[#3B1319] text-[#C6B39A] focus:border-[#B46A72]'
+                    : 'bg-[#FFF5F6]/50 border-[#F7C8D3] text-[#2D3A47] focus:border-[#B46A72]'
               }`}
             />
           </div>
@@ -292,7 +326,13 @@ export default function ExamPrepPage() {
               <div
                 key={ch.id}
                 className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all gap-4 ${
-                  isDark ? 'bg-[#1E080C]/50 border-[#3B1319]' : 'bg-[#FFF5F6]/40 border-[#F7C8D3]/60'
+                  isNotion
+                    ? isDark
+                      ? 'bg-[#191919] border-[#373737]'
+                      : 'bg-[#F7F7F5] border-[#E9E9E7]'
+                    : isDark
+                      ? 'bg-[#1E080C]/50 border-[#3B1319]'
+                      : 'bg-[#FFF5F6]/40 border-[#F7C8D3]/60'
                 }`}
               >
                 <div className="flex items-start gap-3.5 flex-1">

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -84,7 +84,7 @@ const isThisMonth = (dateStr) => {
 };
 
 export default function EnhancedTodoPage() {
-  const { isDark } = useTheme();
+  const { isDark, isNotion } = useTheme();
   const [allTopics, setAllTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -195,24 +195,69 @@ export default function EnhancedTodoPage() {
     done: filtered.filter((t) => t.status === 'done').length,
   };
 
+  const pageBgClass = isNotion
+    ? isDark
+      ? 'bg-[#191919] text-[#D4D4D4]'
+      : 'bg-white text-[#37352F]'
+    : isDark
+      ? 'bg-[#280B0F] text-[#F7EFE6]'
+      : 'bg-[var(--color-bg-base)] text-[#2D3A47]';
+
+  const datePillClass = isNotion
+    ? isDark
+      ? 'bg-[#2F2F2F] text-[#D4D4D4] border border-[#373737]'
+      : 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]'
+    : isDark
+      ? 'bg-[#3B1319] text-[#C6B39A] border border-[#7B694E]/40'
+      : 'bg-[#F7C8D3]/30 text-[#2D3A47] border border-[#F7C8D3]';
+
+  const primaryBtnClass = isNotion
+    ? isDark
+      ? 'bg-[#2F2F2F] hover:bg-[#373737] text-white border border-[#373737]'
+      : 'bg-[#37352F] hover:bg-[#202020] text-white'
+    : 'bg-[#B46A72] hover:bg-[#A05563] text-white';
+
+  const filterBtnClass = (active) => {
+    if (active) {
+      return isNotion
+        ? isDark
+          ? 'bg-[#2F2F2F] text-white border border-[#373737] font-semibold'
+          : 'bg-[#37352F] text-white shadow-sm font-semibold'
+        : 'bg-[#B46A72] text-white shadow-sm font-semibold';
+    }
+    return isNotion
+      ? isDark
+        ? 'bg-[#252525] text-[#9B9A97] hover:text-[#D4D4D4] hover:bg-[#2F2F2F]'
+        : 'bg-[#F7F7F5] text-[#787774] hover:text-[#37352F] hover:bg-[#EFEFED]'
+      : isDark
+        ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#3B1319]/80'
+        : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50';
+  };
+
+  const statCardClass = isNotion
+    ? isDark
+      ? 'bg-[#252525] border-[#373737] text-[#D4D4D4]'
+      : 'bg-white border-[#E9E9E7] text-[#37352F] shadow-sm'
+    : isDark
+      ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]'
+      : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47] shadow-sm';
+
+  const searchInputClass = isNotion
+    ? isDark
+      ? 'bg-[#191919] border-[#373737] text-[#D4D4D4] placeholder:text-[#9B9A97] focus:border-[#D4D4D4] focus:ring-[#D4D4D4]/20'
+      : 'bg-white border-[#E9E9E7] text-[#37352F] placeholder:text-[#787774] focus:border-[#37352F] focus:ring-[#37352F]/10'
+    : isDark
+      ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6] placeholder:text-[#C6B39A]/50 focus:border-[#C6B39A] focus:ring-[#C6B39A]/20'
+      : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47] placeholder:text-[#2D3A47]/40 focus:border-[#B46A72] focus:ring-[#B46A72]/20';
+
   return (
-    <div
-      className={`min-h-screen p-8 ${
-        isDark ? 'bg-[#280B0F] text-[#F7EFE6]' : 'bg-[var(--color-bg-base)] text-[#2D3A47]'
-      }`}
-    >
+    <div className={`min-h-screen p-8 transition-colors ${pageBgClass}`}>
       {/* Header */}
       <header className="mb-8">
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="font-display text-4xl font-bold mb-2">Todo</h1>
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                isDark
-                  ? 'bg-[#3B1319] text-[#C6B39A] border border-[#7B694E]/40'
-                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] border border-[#F7C8D3]'
-              }`}
-            >
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${datePillClass}`}>
               <Calendar size={14} />
               <span>Today is {dateStr}</span>
             </div>
@@ -221,7 +266,7 @@ export default function EnhancedTodoPage() {
           <button
             type="button"
             onClick={() => setShowNewTodoModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B46A72] text-white font-semibold text-sm shadow-sm hover:bg-[#A05563] transition-all"
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all cursor-pointer ${primaryBtnClass}`}
           >
             <Plus size={16} />
             New Todo
@@ -235,13 +280,9 @@ export default function EnhancedTodoPage() {
             <button
               key={view}
               onClick={() => setActiveTimeView(view)}
-              className={`px-4 py-2 rounded-xl font-medium text-xs capitalize transition-all ${
+              className={`px-4 py-2 rounded-xl font-medium text-xs capitalize transition-all cursor-pointer ${filterBtnClass(
                 activeTimeView === view
-                  ? 'bg-[#B46A72] text-white shadow-sm font-semibold'
-                  : isDark
-                  ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#3B1319]/80'
-                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
-              }`}
+              )}`}
             >
               {view === 'all' ? 'All Time' : `${view.charAt(0).toUpperCase() + view.slice(1)} View`}
             </button>
@@ -252,31 +293,24 @@ export default function EnhancedTodoPage() {
         <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setActiveCategory('all')}
-            className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all cursor-pointer ${filterBtnClass(
               activeCategory === 'all'
-                ? 'bg-[#B46A72] text-white'
-                : isDark
-                ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#3B1319]/80'
-                : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
-            }`}
+            )}`}
           >
             All Categories
           </button>
           {Object.keys(CATEGORY_CONFIG).map((cat) => {
             const config = CATEGORY_CONFIG[cat];
             const Icon = config.icon;
+            const isCatActive = activeCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
-                  activeCategory === cat
-                    ? 'text-white'
-                    : isDark
-                    ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#3B1319]/80'
-                    : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
-                }`}
-                style={activeCategory === cat ? { backgroundColor: config.color } : {}}
+                className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${filterBtnClass(
+                  isCatActive
+                )}`}
+                style={isCatActive && !isNotion ? { backgroundColor: config.color } : {}}
               >
                 <Icon size={14} />
                 {config.label}
@@ -290,11 +324,7 @@ export default function EnhancedTodoPage() {
           {STATUS_SECTIONS.map((section) => (
             <div
               key={section.key}
-              className={`px-4 py-2.5 rounded-xl border flex items-center gap-3 ${
-                isDark
-                  ? 'bg-[#3B1319] border-[#7B694E]/40'
-                  : 'bg-white border-[#F7C8D3]/60'
-              }`}
+              className={`px-4 py-2.5 rounded-xl border flex items-center gap-3 ${statCardClass}`}
             >
               <div
                 className="w-2.5 h-2.5 rounded-full"
@@ -310,20 +340,14 @@ export default function EnhancedTodoPage() {
         <div className="relative max-w-md">
           <Search
             size={18}
-            className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${
-              isDark ? 'text-[#C6B39A]/50' : 'text-[#2D3A47]/40'
-            }`}
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 opacity-50`}
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search todos..."
-            className={`w-full pl-12 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 ${
-              isDark
-                ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6] placeholder:text-[#C6B39A]/50 focus:border-[#C6B39A] focus:ring-[#C6B39A]/20'
-                : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47] placeholder:text-[#2D3A47]/40 focus:border-[#B46A72] focus:ring-[#B46A72]/20'
-            }`}
+            className={`w-full pl-12 pr-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 ${searchInputClass}`}
           />
         </div>
       </header>

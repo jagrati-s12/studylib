@@ -17,7 +17,7 @@ import {
 import { studentModel, historicalTrainingDataset } from './mlModelEngine';
 
 export default function AnalyticsPage() {
-  const { isDark } = useTheme();
+  const { isDark, isNotion } = useTheme();
 
   // Student Telemetry State for ML Prediction
   const [studentRecord, setStudentRecord] = useState({
@@ -92,12 +92,18 @@ export default function AnalyticsPage() {
   const maxHours = Math.max(...weeklyActivity.map(w => w.hours));
 
   return (
-    <div className={`flex-1 min-h-screen p-8 transition-colors ${isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'}`}>
+    <div className={`flex-1 min-h-screen p-8 transition-colors ${
+      isNotion
+        ? isDark ? 'bg-[#191919] text-[#D4D4D4]' : 'bg-[#FFFFFF] text-[#37352F]'
+        : isDark ? 'bg-[#1E080C] text-[#C6B39A]' : 'bg-[#FFF5F6] text-[#2D3A47]'
+    }`}>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 text-[#B46A72]">
+          <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 ${
+            isNotion ? (isDark ? 'text-[#D4D4D4]' : 'text-[#37352F]') : 'text-[#B46A72]'
+          }`}>
             <BarChart2 size={16} />
             <span>Performance Metrics</span>
           </div>
@@ -114,19 +120,21 @@ export default function AnalyticsPage() {
             <div
               key={idx}
               className={`p-6 rounded-2xl border transition-all ${
-                isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'
+                isNotion
+                  ? isDark ? 'bg-[#202020] border-[#373737]' : 'bg-white border-[#E9E9E7] shadow-sm'
+                  : isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-semibold uppercase tracking-wider opacity-60">{stat.label}</span>
-                <div className={`p-2.5 rounded-xl bg-black/5 ${stat.color}`}>
+                <div className={`p-2.5 rounded-xl ${isNotion ? (isDark ? 'bg-[#252525]' : 'bg-black/5') : 'bg-black/5'} ${stat.color}`}>
                   <Icon size={20} />
                 </div>
               </div>
 
               <div className="flex items-baseline justify-between">
                 <h3 className="text-3xl font-display font-bold tracking-tight">{stat.value}</h3>
-                <span className="text-xs font-semibold text-[#6B7C50] flex items-center gap-0.5">
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                   <TrendingUp size={12} /> {stat.change}
                 </span>
               </div>
@@ -139,13 +147,21 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
         {/* Weekly Study Hours Bar Chart */}
-        <div className={`lg:col-span-2 p-6 rounded-2xl border ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'}`}>
+        <div className={`lg:col-span-2 p-6 rounded-2xl border ${
+          isNotion
+            ? isDark ? 'bg-[#202020] border-[#373737]' : 'bg-white border-[#E9E9E7] shadow-sm'
+            : isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'
+        }`}>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-display font-bold text-lg">Weekly Study Hours</h3>
               <p className="text-xs opacity-60 mt-0.5">Total hours spent across all subjects this week</p>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#B46A72]/10 text-[#B46A72]">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+              isNotion
+                ? isDark ? 'bg-[#252525] text-[#D4D4D4] border border-[#373737]' : 'bg-[#EFEFED] text-[#37352F] border border-[#E9E9E7]'
+                : 'bg-[#B46A72]/10 text-[#B46A72]'
+            }`}>
               Avg 5.5 hrs/day
             </span>
           </div>
@@ -159,7 +175,11 @@ export default function AnalyticsPage() {
                     {item.hours}h
                   </span>
                   <div
-                    className="w-full max-w-[44px] rounded-t-xl bg-[#B46A72] transition-all group-hover:bg-[#9f5960]"
+                    className={`w-full max-w-[44px] rounded-t-xl transition-all ${
+                      isNotion
+                        ? isDark ? 'bg-[#D4D4D4] group-hover:bg-white' : 'bg-[#37352F] group-hover:bg-[#202020]'
+                        : 'bg-[#B46A72] group-hover:bg-[#9f5960]'
+                    }`}
                     style={{ height: `${heightPercent}%` }}
                   />
                   <span className="text-xs font-medium opacity-70 pb-1">{item.day}</span>
@@ -170,19 +190,29 @@ export default function AnalyticsPage() {
         </div>
 
         {/* AI Study Recommendations */}
-        <div className={`p-6 rounded-2xl border flex flex-col justify-between ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'}`}>
+        <div className={`p-6 rounded-2xl border flex flex-col justify-between ${
+          isNotion
+            ? isDark ? 'bg-[#202020] border-[#373737]' : 'bg-white border-[#E9E9E7] shadow-sm'
+            : isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'
+        }`}>
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#B46A72] mb-3">
+            <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-3 ${
+              isNotion ? (isDark ? 'text-amber-400' : 'text-[#37352F]') : 'text-[#B46A72]'
+            }`}>
               <Sparkles size={16} />
               <span>AI Study Coach</span>
             </div>
             <h3 className="font-display font-bold text-lg mb-2">Smart Insights</h3>
             <p className="text-sm opacity-80 leading-relaxed mb-4">
-              You are most productive during morning hours (9 AM - 12 PM). Your weakest subject is <strong className="text-[#B46A72]">Computer Networks</strong> — recommend spending 2 hours reviewing TCP/IP protocols today.
+              You are most productive during morning hours (9 AM - 12 PM). Your weakest subject is <strong>Computer Networks</strong> — recommend spending 2 hours reviewing TCP/IP protocols today.
             </p>
           </div>
 
-          <div className={`p-4 rounded-xl border text-xs leading-relaxed ${isDark ? 'bg-[#1E080C] border-[#3B1319]' : 'bg-[#FFF5F6] border-[#F7C8D3]'}`}>
+          <div className={`p-4 rounded-xl border text-xs leading-relaxed ${
+            isNotion
+              ? isDark ? 'bg-[#191919] border-[#373737]' : 'bg-[#F7F7F5] border-[#E9E9E7]'
+              : isDark ? 'bg-[#1E080C] border-[#3B1319]' : 'bg-[#FFF5F6] border-[#F7C8D3]'
+          }`}>
             <p className="font-semibold mb-1">🎯 Goal for today:</p>
             <p className="opacity-75">Complete 2 chapters of Exam Prep & clear 5 mistake notebook items.</p>
           </div>
@@ -191,7 +221,11 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Subject Completion Rates */}
-      <div className={`p-6 rounded-2xl border ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'}`}>
+      <div className={`p-6 rounded-2xl border ${
+        isNotion
+          ? isDark ? 'bg-[#202020] border-[#373737]' : 'bg-white border-[#E9E9E7] shadow-sm'
+          : isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'
+      }`}>
         <h3 className="font-display font-bold text-lg mb-6">Subject Completion Rates</h3>
 
         <div className="space-y-5">
@@ -205,11 +239,11 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-4 text-xs opacity-80">
                   <span>{subj.hours} hrs</span>
                   <span>{subj.topics} topics</span>
-                  <span className="font-bold text-[#B46A72]">{subj.progress}%</span>
+                  <span className="font-bold">{subj.progress}%</span>
                 </div>
               </div>
 
-              <div className="w-full h-2.5 rounded-full bg-black/10 overflow-hidden">
+              <div className="w-full h-2.5 rounded-full bg-black/10 dark:bg-black/30 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${subj.progress}%`, backgroundColor: subj.color }}

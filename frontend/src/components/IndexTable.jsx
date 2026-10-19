@@ -1,21 +1,13 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Trash2, ArrowUpDown, FileText, ChevronDown, ChevronRight, FolderOpen, Plus } from 'lucide-react';
 import { formatRelativeDate } from '@/lib/utils';
 
-  topics: Topic[];
-  onTopicClick: (topicId) => void;
-  onDeleteTopic: (topicId) => void;
-  onAddSubtopic: (parentTopicId) => void;
-}
+export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic }) {
+  const [sortField, setSortField] = useState('serial_number');
+  const [sortDir, setSortDir] = useState('asc');
+  const [expanded, setExpanded] = useState(new Set());
 
-
-
-export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic }: IndexTableProps) {
-  const [sortField, setSortField] = useState<SortField>('serial_number');
-  const [sortDir, setSortDir] = useState<SortDirection>('asc');
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  function handleSort(field: SortField) {
+  function handleSort(field) {
     if (field === sortField) {
       setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -49,7 +41,7 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic 
     );
   }
 
-  function SortHeader({ field, label }: { field: SortField; label }) {
+  function SortHeader({ field, label }) {
     const active = sortField === field;
     return (
       <button
@@ -94,21 +86,29 @@ export function IndexTable({ topics, onTopicClick, onDeleteTopic, onAddSubtopic 
             const isOpen = expanded.has(topic.id);
             const row = <tr
               key={topic.id}
-              onClick={() => {
-                if (!hasChildren) { onTopicClick(topic.id); return; }
-                setExpanded(previous => {
-                  const next = new Set(previous);
-                  if (next.has(topic.id)) next.delete(topic.id);
-                  else next.add(topic.id);
-                  return next;
-                });
-              }}
+              onClick={() => onTopicClick(topic.id)}
               className="group cursor-pointer hover:bg-primary-50/50 transition-colors"
             >
               <td className="px-4 py-3">
-                <span className="inline-flex items-center justify-center gap-1 w-12 h-8 rounded-lg bg-surface-100 text-sm font-semibold text-surface-700 group-hover:bg-primary-100 group-hover:text-primary-700 transition-colors">
-                  {hasChildren ? (isOpen ? <ChevronDown size={15}/> : <ChevronRight size={15}/>) : null}
-                  {topic.serial_number}
+                <span className="inline-flex items-center justify-center gap-1 min-w-[3rem] px-2 h-8 rounded-lg bg-surface-100 text-sm font-semibold text-surface-700 group-hover:bg-primary-100 group-hover:text-primary-700 transition-colors">
+                  {hasChildren ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpanded(previous => {
+                          const next = new Set(previous);
+                          if (next.has(topic.id)) next.delete(topic.id);
+                          else next.add(topic.id);
+                          return next;
+                        });
+                      }}
+                      className="p-0.5 hover:bg-black/10 rounded"
+                    >
+                      {isOpen ? <ChevronDown size={15}/> : <ChevronRight size={15}/>}
+                    </button>
+                  ) : null}
+                  #{topic.serial_number}
                 </span>
               </td>
               <td className="px-4 py-3 font-medium text-surface-800 group-hover:text-primary-700 transition-colors">

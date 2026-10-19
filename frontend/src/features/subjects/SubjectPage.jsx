@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Plus,
@@ -11,17 +11,17 @@ import { IndexTable } from '@/components/IndexTable';
 
 
 export default function SubjectPage() {
-  const { subjectId } = useParams<{ subjectId }>();
+  const { subjectId } = useParams();
   const navigate = useNavigate();
-  const [subject, setSubject] = useState<Subject | null>(null);
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [subject, setSubject] = useState(null);
+  const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSerial, setNewSerial] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState('');
-  const [indexAction, setIndexAction] = useState<'new' | 'sub'>('new');
+  const [indexAction, setIndexAction] = useState('new');
   const [parentTopicId, setParentTopicId] = useState('');
   const [importNotice, setImportNotice] = useState(false);
 

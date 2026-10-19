@@ -15,6 +15,7 @@ import SettingsPage from '@/features/settings/SettingsPage';
 import AIAssistantPage from '@/features/ai/AIStudyAssistantPage';
 import ExamPrepPage from '@/features/examprep/ExamPrepPage';
 import AnalyticsPage from '@/features/analytics/AnalyticsPage';
+import SubjectPage from '@/features/subjects/SubjectPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="/dashboard" element={<Navigate to="/notes" replace />} />
                 <Route path="/schedule" element={<SchedulePage />} />
                 <Route path="/notes" element={<NotesPage />} />
+                <Route path="/subjects/:subjectId" element={<SubjectPage />} />
                 <Route path="/subjects/:subjectId/topics/:topicId" element={<TopicWorkspacePage />} />
                 <Route path="/standalone-notes" element={<StandaloneNotesPage />} />
                 <Route path="/pomodoro" element={<PomodoroPage />} />

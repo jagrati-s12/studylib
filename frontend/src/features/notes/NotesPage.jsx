@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -15,6 +15,8 @@ import {
   Columns2,
   Columns3,
   ChevronRight,
+  ChevronDown,
+  Trash2,
   X,
   ArrowUpRight,
   FolderOpen,
@@ -124,11 +126,14 @@ export default function NotesPage() {
   const fileInputRef = useRef(null);
   const [uploadTargetPane, setUploadTargetPane] = useState(null);
 
-  // Icon picker state & New Subject Modal & New Topic Modal
+  // Icon picker state & New Subject Modal & New Topic Modal & Subtopic Modal
   const [iconPickerSubject, setIconPickerSubject] = useState(null);
   const [showNewSubjectModal, setShowNewSubjectModal] = useState(false);
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState('');
+  const [subtopicParent, setSubtopicParent] = useState(null);
+  const [newSubtopicTitle, setNewSubtopicTitle] = useState('');
+  const [expandedTopics, setExpandedTopics] = useState(new Set());
 
   // Nested folders state inside Materials
   const [customFolders, setCustomFolders] = useState(['Chapter 1 Notes', 'Extra References', 'Problem Sets']);
@@ -704,117 +709,284 @@ export default function NotesPage() {
             <p className="text-sm opacity-60">Add your first indexed chapter</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2 w-full">
-            {topics.map((topic) => {
-              const subtopics = topics.filter(t => t.parent_topic_id === topic.id);
-              return (
-                <div key={topic.id} className="space-y-2">
-                  <div
-                    onClick={() => openTopic(topic)}
-                    className={`w-full text-left flex items-center gap-4 p-4 rounded-2xl border transition-all group cursor-pointer ${
-                      isDark
-                        ? 'bg-[#3B1319] border-[#7B694E]/40 hover:border-[#C6B39A]/60 hover:shadow-lg'
-                        : 'bg-white border-[#F7C8D3]/60 hover:border-[#B46A72]/40 hover:shadow-lg'
-                    }`}
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${
-                        isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#B46A72]'
-                      }`}
-                    >
-                      #{topic.serial_number}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base truncate">{topic.title}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs opacity-60">
-                        <span>{topic.material_count ?? 0} materials</span>
-                        {topic.status && (
-                          <span className="capitalize">{topic.status.replace('_', ' ')}</span>
-                        )}
-                      </div>
-                    </div>
-                    {/* Progress */}
-                    {topic.progress !== undefined && topic.progress > 0 && (
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div
-                          className={`w-20 h-1.5 rounded-full overflow-hidden ${
-                            isDark ? 'bg-[#280B0F]' : 'bg-[#F7C8D3]/30'
-                          }`}
-                        >
-                          <div
-                            className="h-full bg-[#A8B58A] rounded-full"
-                            style={{ width: `${topic.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] font-bold opacity-60">{topic.progress}%</span>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const subTitle = prompt(`Enter subtopic title for #${topic.serial_number} ${topic.title}:`);
-                        if (!subTitle || !subTitle.trim()) return;
-                        const nextSerialNum = Number((topic.serial_number + (subtopics.length + 1) * 0.1).toFixed(1));
-                        api.createTopic(activeSubject.id, {
-                          serial_number: nextSerialNum,
-                          title: subTitle.trim(),
-                          parent_topic_id: topic.id,
-                          status: 'todo',
-                          tags: ['#subtopic'],
-                        }).then((created) => {
-                          setTopics((prev) => [...prev, created]);
-                        }).catch((err) => {
-                          console.error('Failed to create subtopic:', err);
-                          window.alert(err.message || 'Failed to create subtopic');
-                        });
-                      }}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-all ${
-                        isDark ? 'bg-[#7B694E] text-[#F7EFE6] hover:bg-[#8C7A5D]' : 'bg-[#B46A72] text-white hover:bg-[#A05563]'
-                      }`}
-                      title="Add subtopic"
-                    >
-                      <Plus size={14} />
-                      <span>Add Subtopic</span>
-                    </button>
-                    <ChevronRight
-                      size={16}
-                      className="opacity-40 shrink-0 group-hover:translate-x-0.5 transition-transform"
-                    />
-                  </div>
+          <div className="flex flex-col gap-3 w-full">
+            {topics
+              .filter((t) => !t.parent_topic_id && !t.parentTopicId)
+              .map((topic) => {
+                const subtopics = topics.filter(
+                  (t) => t.parent_topic_id === topic.id || t.parentTopicId === topic.id
+                );
+                const hasSubtopics = subtopics.length > 0;
+                const isExpanded = expandedTopics.has(topic.id) || true; // expanded by default for easy visibility
 
-                  {/* Render Subtopics indented underneath */}
-                  {subtopics.length > 0 && (
-                    <div className="pl-12 space-y-2">
-                      {subtopics.map((sub) => (
+                return (
+                  <div key={topic.id} className="space-y-2">
+                    <div
+                      onClick={() => openTopic(topic)}
+                      className={`w-full text-left flex items-center gap-4 p-4 rounded-2xl border transition-all group cursor-pointer ${
+                        isDark
+                          ? 'bg-[#3B1319] border-[#7B694E]/40 hover:border-[#C6B39A]/60 hover:shadow-lg'
+                          : 'bg-white border-[#F7C8D3]/60 hover:border-[#B46A72]/40 hover:shadow-lg'
+                      }`}
+                    >
+                      {/* Serial Number & Expand Toggle */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {hasSubtopics ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedTopics((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(topic.id)) next.delete(topic.id);
+                                else next.add(topic.id);
+                                return next;
+                              });
+                            }}
+                            className="p-1 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 opacity-70"
+                            title={isExpanded ? 'Collapse subtopics' : 'Expand subtopics'}
+                          >
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </button>
+                        ) : null}
                         <div
-                          key={sub.id}
-                          onClick={() => openTopic(sub)}
-                          className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                            isDark
-                              ? 'bg-[#3B1319]/60 border-[#7B694E]/30 hover:border-[#C6B39A]/50'
-                              : 'bg-white/90 border-[#F7C8D3]/40 hover:border-[#B46A72]/30 shadow-xs'
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${
+                            isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#B46A72]'
                           }`}
                         >
+                          #{topic.serial_number}
+                        </div>
+                      </div>
+
+                      {/* Topic Title & Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-base truncate group-hover:text-[#B46A72] transition-colors">
+                            {topic.title}
+                          </h3>
+                          {hasSubtopics && (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 opacity-70">
+                              {subtopics.length} {subtopics.length === 1 ? 'subtopic' : 'subtopics'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs opacity-60">
+                          <span>{topic.material_count ?? 0} materials</span>
+                          {topic.status && (
+                            <span className="capitalize">{topic.status.replace('_', ' ')}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      {topic.progress !== undefined && topic.progress > 0 && (
+                        <div className="hidden sm:flex items-center gap-2 shrink-0">
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                              isDark ? 'bg-[#7B694E]/20 text-[#C6B39A]' : 'bg-[#F7C8D3]/20 text-[#B46A72]'
+                            className={`w-20 h-1.5 rounded-full overflow-hidden ${
+                              isDark ? 'bg-[#280B0F]' : 'bg-[#F7C8D3]/30'
                             }`}
                           >
-                            #{sub.serial_number}
+                            <div
+                              className="h-full bg-[#A8B58A] rounded-full"
+                              style={{ width: `${topic.progress}%` }}
+                            />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm truncate">{sub.title}</h4>
-                            <span className="text-[11px] opacity-50">Subtopic</span>
-                          </div>
-                          <ChevronRight size={14} className="opacity-40 shrink-0" />
+                          <span className="text-[11px] font-bold opacity-60">{topic.progress}%</span>
                         </div>
-                      ))}
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSubtopicParent(topic);
+                            setNewSubtopicTitle('');
+                          }}
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition-all ${
+                            isDark ? 'bg-[#7B694E] text-[#F7EFE6] hover:bg-[#8C7A5D]' : 'bg-[#B46A72] text-white hover:bg-[#A05563]'
+                          }`}
+                          title="Add subtopic under this index"
+                        >
+                          <Plus size={14} />
+                          <span>Add Subtopic</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (window.confirm(`Delete index #${topic.serial_number} "${topic.title}"?`)) {
+                              await api.deleteTopic(topic.id);
+                              setTopics((prev) => prev.filter((t) => t.id !== topic.id && t.parent_topic_id !== topic.id && t.parentTopicId !== topic.id));
+                            }
+                          }}
+                          className="p-1.5 rounded-lg opacity-40 hover:opacity-100 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                          title="Delete index topic"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+
+                      <ChevronRight
+                        size={16}
+                        className="opacity-40 shrink-0 group-hover:translate-x-0.5 transition-transform"
+                      />
                     </div>
-                  )}
+
+                    {/* Render Subtopics indented underneath parent */}
+                    {hasSubtopics && isExpanded && (
+                      <div className="pl-10 space-y-2">
+                        {subtopics.map((sub) => (
+                          <div
+                            key={sub.id}
+                            onClick={() => openTopic(sub)}
+                            className={`w-full text-left flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer group/sub ${
+                              isDark
+                                ? 'bg-[#3B1319]/70 border-[#7B694E]/30 hover:border-[#C6B39A]/60'
+                                : 'bg-white/90 border-[#F7C8D3]/50 hover:border-[#B46A72]/40 shadow-xs'
+                            }`}
+                          >
+                            <div
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                                isDark ? 'bg-[#7B694E]/20 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#B46A72]'
+                              }`}
+                            >
+                              #{sub.serial_number}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-sm truncate group-hover/sub:text-[#B46A72] transition-colors">
+                                {sub.title}
+                              </h4>
+                              <span className="text-[11px] opacity-60">
+                                Subtopic · {sub.material_count ?? 0} materials
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Delete subtopic #${sub.serial_number} "${sub.title}"?`)) {
+                                  await api.deleteTopic(sub.id);
+                                  setTopics((prev) => prev.filter((t) => t.id !== sub.id));
+                                }
+                              }}
+                              className="p-1.5 rounded-lg opacity-30 hover:opacity-100 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                              title="Delete subtopic"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                            <ChevronRight size={14} className="opacity-40 shrink-0 group-hover/sub:translate-x-0.5 transition-transform" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Modal for adding a Subtopic */}
+        {subtopicParent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div
+              className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+                isDark ? 'bg-[#3B1319] border-[#7B694E]/40 text-[#F7EFE6]' : 'bg-white border-[#F7C8D3]/60 text-[#2D3A47]'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-display font-bold text-lg">Add Subtopic</h3>
+                  <p className="text-xs opacity-60">
+                    To Index #{subtopicParent.serial_number}: {subtopicParent.title}
+                  </p>
                 </div>
-              );
-            })}
+                <button
+                  onClick={() => setSubtopicParent(null)}
+                  className="p-1.5 rounded-lg hover:bg-black/5"
+                >
+                  <X size={18} className="opacity-60" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase opacity-60 mb-2">Subtopic Title</label>
+                  <input
+                    type="text"
+                    value={newSubtopicTitle}
+                    onChange={(e) => setNewSubtopicTitle(e.target.value)}
+                    placeholder="e.g. 1.1 Hyperparameter Tuning & Grid Search"
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none ${
+                      isDark ? 'bg-[#280B0F] border-[#7B694E]/40 text-white' : 'bg-white border-[#F7C8D3]'
+                    }`}
+                    autoFocus
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter' && newSubtopicTitle.trim()) {
+                        e.preventDefault();
+                        const existingSubs = topics.filter(
+                          (t) => t.parent_topic_id === subtopicParent.id || t.parentTopicId === subtopicParent.id
+                        );
+                        const nextSerialNum = Number((subtopicParent.serial_number + (existingSubs.length + 1) * 0.1).toFixed(1));
+                        try {
+                          const created = await api.createTopic(activeSubject.id, {
+                            serial_number: nextSerialNum,
+                            title: newSubtopicTitle.trim(),
+                            parent_topic_id: subtopicParent.id,
+                            status: 'todo',
+                            tags: ['#subtopic'],
+                          });
+                          setTopics((prev) => [...prev, created]);
+                          setExpandedTopics((prev) => new Set([...prev, subtopicParent.id]));
+                          setNewSubtopicTitle('');
+                          setSubtopicParent(null);
+                        } catch (err) {
+                          console.error('Failed to create subtopic:', err);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setSubtopicParent(null)}
+                  className={`px-4 py-2 rounded-xl font-semibold text-sm ${
+                    isDark ? 'bg-[#7B694E]/30 text-[#C6B39A]' : 'bg-[#F7C8D3]/30 text-[#2D3A47]'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!newSubtopicTitle.trim()) return;
+                    const existingSubs = topics.filter(
+                      (t) => t.parent_topic_id === subtopicParent.id || t.parentTopicId === subtopicParent.id
+                    );
+                    const nextSerialNum = Number((subtopicParent.serial_number + (existingSubs.length + 1) * 0.1).toFixed(1));
+                    try {
+                      const created = await api.createTopic(activeSubject.id, {
+                        serial_number: nextSerialNum,
+                        title: newSubtopicTitle.trim(),
+                        parent_topic_id: subtopicParent.id,
+                        status: 'todo',
+                        tags: ['#subtopic'],
+                      });
+                      setTopics((prev) => [...prev, created]);
+                      setExpandedTopics((prev) => new Set([...prev, subtopicParent.id]));
+                      setNewSubtopicTitle('');
+                      setSubtopicParent(null);
+                    } catch (err) {
+                      console.error('Failed to create subtopic:', err);
+                    }
+                  }}
+                  disabled={!newSubtopicTitle.trim()}
+                  className="px-5 py-2 rounded-xl bg-[#B46A72] text-white font-semibold text-sm hover:bg-[#A05563] disabled:opacity-50"
+                >
+                  Add Subtopic
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

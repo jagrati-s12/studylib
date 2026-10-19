@@ -1,25 +1,51 @@
-﻿import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext(undefined);
 
 export function ThemeProvider({ children }) {
+  // Mode: 'light' | 'dark'
   const [theme, setThemeState] = useState(() => {
     const saved = localStorage.getItem('study_library_theme');
     if (saved === 'dark' || saved === 'light') {
       return saved;
     }
-    // Default to light mode (Vanilla Cream palette) as requested
     return 'light';
+  });
+
+  // Palette: 'notion' | 'warm'
+  const [palette, setPaletteState] = useState(() => {
+    const saved = localStorage.getItem('study_library_palette');
+    if (saved === 'notion' || saved === 'warm') {
+      return saved;
+    }
+    // Default to Notion palette as requested
+    return 'notion';
   });
 
   useEffect(() => {
     localStorage.setItem('study_library_theme', theme);
+    localStorage.setItem('study_library_palette', palette);
+
+    const root = document.documentElement;
+    root.setAttribute('data-palette', palette);
+    root.setAttribute('data-theme', theme);
+
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      root.classList.remove('light');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      root.classList.add('light');
     }
-  }, [theme]);
+
+    if (palette === 'notion') {
+      root.classList.add('theme-notion');
+      root.classList.remove('theme-warm');
+    } else {
+      root.classList.add('theme-warm');
+      root.classList.remove('theme-notion');
+    }
+  }, [theme, palette]);
 
   const toggleTheme = () => {
     setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -29,13 +55,20 @@ export function ThemeProvider({ children }) {
     setThemeState(newTheme);
   };
 
+  const setPalette = (newPalette) => {
+    setPaletteState(newPalette);
+  };
+
   return (
     <ThemeContext.Provider
       value={{
         theme,
         isDark: theme === 'dark',
+        palette,
+        isNotion: palette === 'notion',
         toggleTheme,
         setTheme,
+        setPalette,
       }}
     >
       {children}
@@ -50,3 +83,4 @@ export function useTheme() {
   }
   return context;
 }
+

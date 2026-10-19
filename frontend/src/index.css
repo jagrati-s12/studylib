@@ -48,16 +48,79 @@
   --color-surface-950: #121A22;
 }
 
-:root {
+/* Default: Notion palette */
+:root,
+[data-palette="notion"] {
+  /* Light theme */
+  --bg: #FFFFFF;
+  --sidebar: #F7F7F5;
+  --surface: #FFFFFF;
+  --text: #37352F;
+  --text-muted: #787774;
+  --border: #E9E9E7;
+  --hover: #EFEFED;
+  --accent: #2383E2;
+
+  --color-bg-base: #FFFFFF;
+  --color-sidebar-base: #F7F7F5;
+  --color-card-base: #FFFFFF;
+  --color-text-base: #37352F;
+  --color-border-base: #E9E9E7;
+  color-scheme: light;
+}
+
+[data-palette="notion"].dark,
+[data-palette="notion"][data-theme="dark"] {
+  /* Dark theme */
+  --bg: #191919;
+  --sidebar: #202020;
+  --surface: #252525;
+  --text: #D4D4D4;
+  --text-muted: #9B9A97;
+  --border: #373737;
+  --hover: #2F2F2F;
+  --accent: #2383E2;
+
+  --color-bg-base: #191919;
+  --color-sidebar-base: #202020;
+  --color-card-base: #252525;
+  --color-text-base: #D4D4D4;
+  --color-border-base: #373737;
+  color-scheme: dark;
+}
+
+/* Warm / Classic palette */
+[data-palette="warm"] {
+  --bg: #F7EFE6;
+  --sidebar: #FFF5F6;
+  --surface: #FFFFFF;
+  --text: #2D3A47;
+  --text-muted: #6B7B8D;
+  --border: #F7C8D3;
+  --hover: #F6E2E4;
+  --accent: #B46A72;
+
   --color-bg-base: #F7EFE6;
+  --color-sidebar-base: #FFF5F6;
   --color-card-base: #FFFFFF;
   --color-text-base: #2D3A47;
   --color-border-base: #F7C8D3;
   color-scheme: light;
 }
 
-.dark {
+[data-palette="warm"].dark,
+[data-palette="warm"][data-theme="dark"] {
+  --bg: #280B0F;
+  --sidebar: #280B0F;
+  --surface: #3B1319;
+  --text: #F7EFE6;
+  --text-muted: #C6B39A;
+  --border: #3B1319;
+  --hover: #531B23;
+  --accent: #B46A72;
+
   --color-bg-base: #280B0F;
+  --color-sidebar-base: #280B0F;
   --color-card-base: #3B1319;
   --color-text-base: #F7EFE6;
   --color-border-base: #531B23;
@@ -70,8 +133,8 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-bg-base);
-  color: var(--color-text-base);
+  background-color: var(--bg);
+  color: var(--text);
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -82,8 +145,284 @@ h1, h2, h3, .font-display {
 
 /* Dark mode surface utility adjustments */
 .dark body {
-  background-color: #280B0F;
-  color: #F7EFE6;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* =========================================================================
+   UNIVERSAL NOTION & WARM THEME OVERRIDES
+   Guarantees that ANY component across the entire app switches seamlessly
+   between modes (Light <-> Dark) and palettes (Notion <-> Warm Classic)
+   without leaking hardcoded dark roast or pink blush tokens.
+   ========================================================================= */
+
+/* --- NOTION DARK MODE OVERRIDES --- */
+html[data-palette="notion"].dark,
+html[data-palette="notion"][data-theme="dark"] {
+  /* Main background containers */
+  main,
+  [class*="bg-[#1E080C]"],
+  [class*="bg-[#1F080C]"],
+  [class*="bg-[#1A070A]"],
+  [class*="bg-[#280B0F]"],
+  [class*="bg-[#121A22]"],
+  [class*="bg-[#1F2933]"] {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+  }
+
+  /* Gradients removal on dark Notion */
+  [class*="from-[#280B0F]"],
+  [class*="to-[#3B1319]"],
+  [class*="bg-gradient-"] {
+    background-image: none !important;
+    background-color: var(--surface) !important;
+  }
+
+  /* Cards, panels, modal content, and grouped containers */
+  [class*="bg-[#3B1319]"],
+  [class*="bg-[#4A1A22]"],
+  [class*="bg-[#501B24]"],
+  [class*="bg-[#531B23]"],
+  [class*="bg-[#7B694E]"],
+  [class*="bg-[#2D3A47]"],
+  [class*="bg-[#280B0F]/"],
+  [class*="bg-[#3B1319]/"] {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+  }
+
+  /* Sidebar */
+  aside {
+    background-color: var(--sidebar) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+
+  /* Primary Action Buttons */
+  button[class*="bg-[#B46A72]"],
+  button[class*="bg-[#A05563]"],
+  button[class*="bg-[#9f5961]"],
+  button[class*="bg-[#9E535B]"] {
+    background-color: #2F2F2F !important;
+    border: 1px solid #373737 !important;
+    color: #FFFFFF !important;
+  }
+  button[class*="bg-[#B46A72]"]:hover,
+  button[class*="bg-[#A05563]"]:hover,
+  button[class*="bg-[#9f5961]"]:hover {
+    background-color: #373737 !important;
+  }
+
+  /* Badges, indicators, active toggle tracks with rosewood */
+  span[class*="bg-[#B46A72]"],
+  div[class*="bg-[#B46A72]"] {
+    background-color: #2F2F2F !important;
+    border-color: #373737 !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Borders & Dividers */
+  [class*="border-[#7B694E]"],
+  [class*="border-[#3B1319]"],
+  [class*="border-[#531B23]"],
+  [class*="border-[#501B24]"],
+  [class*="border-[#B46A72]"],
+  [class*="border-[#F7C8D3]"],
+  [class*="border-[#EFE4CD]"],
+  [class*="border-[#2D3A47]"],
+  [class*="border-[#C6B39A]"] {
+    border-color: var(--border) !important;
+  }
+
+  /* Text colors */
+  [class*="text-[#F7EFE6]"],
+  [class*="text-[#FFF7E6]"],
+  [class*="text-[#FAF1F2]"] {
+    color: var(--text) !important;
+  }
+
+  [class*="text-[#C6B39A]"],
+  [class*="text-[#7B694E]"],
+  [class*="text-[#6B7B8D]"],
+  [class*="text-[#2D3A47]"] {
+    color: var(--text-muted) !important;
+  }
+
+  [class*="text-[#B46A72]"] {
+    color: #2383E2 !important;
+  }
+
+  /* Hover states */
+  [class*="hover:bg-[#3B1319]"]:hover,
+  [class*="hover:bg-[#531B23]"]:hover,
+  [class*="hover:bg-[#7B694E]"]:hover {
+    background-color: var(--hover) !important;
+    color: var(--text) !important;
+  }
+
+  /* Form Inputs, textareas, selects */
+  input, select, textarea {
+    background-color: #191919 !important;
+    border-color: #373737 !important;
+    color: #D4D4D4 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #9B9A97 !important;
+    opacity: 0.6 !important;
+  }
+}
+
+/* --- NOTION LIGHT MODE OVERRIDES --- */
+html[data-palette="notion"]:not(.dark),
+html[data-palette="notion"][data-theme="light"] {
+  /* Main background containers */
+  main,
+  [class*="bg-[#1E080C]"],
+  [class*="bg-[#1F080C]"],
+  [class*="bg-[#1A070A]"],
+  [class*="bg-[#280B0F]"],
+  [class*="bg-[#FFF5F6]"],
+  [class*="bg-[#F7EFE6]"],
+  [class*="bg-[#FFF7E6]"] {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+  }
+
+  /* Gradients removal on light Notion */
+  [class*="from-[#280B0F]"],
+  [class*="to-[#3B1319]"],
+  [class*="from-white"],
+  [class*="to-[#FFF5F6]"],
+  [class*="bg-gradient-"] {
+    background-image: none !important;
+    background-color: var(--surface) !important;
+  }
+
+  /* Cards, panels, modal content */
+  [class*="bg-[#3B1319]"],
+  [class*="bg-[#4A1A22]"],
+  [class*="bg-[#501B24]"],
+  [class*="bg-[#531B23]"],
+  [class*="bg-[#280B0F]/"],
+  [class*="bg-[#3B1319]/"],
+  [class*="bg-[#FFF5F6]"] {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Subtle badges, pills, and chip backgrounds */
+  [class*="bg-[#F7C8D3]"],
+  [class*="bg-[#7B694E]"] {
+    background-color: var(--sidebar) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Sidebar */
+  aside {
+    background-color: var(--sidebar) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+
+  /* Primary Action Buttons */
+  button[class*="bg-[#B46A72]"],
+  button[class*="bg-[#A05563]"],
+  button[class*="bg-[#9f5961]"],
+  button[class*="bg-[#9E535B]"] {
+    background-color: #37352F !important;
+    border: 1px solid #37352F !important;
+    color: #FFFFFF !important;
+  }
+  button[class*="bg-[#B46A72]"]:hover,
+  button[class*="bg-[#A05563]"]:hover,
+  button[class*="bg-[#9f5961]"]:hover {
+    background-color: #202020 !important;
+  }
+
+  /* Badges & Icons with rosewood */
+  span[class*="bg-[#B46A72]"],
+  div[class*="bg-[#B46A72]"] {
+    background-color: #37352F !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Outline buttons / borders */
+  [class*="border-[#7B694E]"],
+  [class*="border-[#3B1319]"],
+  [class*="border-[#531B23]"],
+  [class*="border-[#501B24]"],
+  [class*="border-[#B46A72]"],
+  [class*="border-[#F7C8D3]"],
+  [class*="border-[#EFE4CD]"],
+  [class*="border-[#2D3A47]"],
+  [class*="border-[#C6B39A]"] {
+    border-color: var(--border) !important;
+  }
+
+  /* Text colors */
+  [class*="text-[#2D3A47]"],
+  [class*="text-[#F7EFE6]"],
+  [class*="text-[#FFF7E6]"],
+  [class*="text-[#FAF1F2]"] {
+    color: var(--text) !important;
+  }
+
+  [class*="text-[#C6B39A]"],
+  [class*="text-[#7B694E]"],
+  [class*="text-[#6B7B8D]"] {
+    color: var(--text-muted) !important;
+  }
+
+  [class*="text-[#B46A72]"] {
+    color: var(--text) !important;
+  }
+
+  /* Hover states */
+  [class*="hover:bg-[#3B1319]"]:hover,
+  [class*="hover:bg-[#F7C8D3]"]:hover,
+  [class*="hover:bg-[#531B23]"]:hover,
+  [class*="hover:bg-[#7B694E]"]:hover {
+    background-color: var(--hover) !important;
+    color: var(--text) !important;
+  }
+
+  /* Inputs, textareas, selects */
+  input, select, textarea {
+    background-color: #FFFFFF !important;
+    border-color: #E9E9E7 !important;
+    color: #37352F !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #787774 !important;
+    opacity: 0.6 !important;
+  }
+}
+
+/* --- WARM CLASSIC MODE TRANSITION SAFEGUARDS --- */
+/* Ensures rogue hardcoded inputs adapt cleanly when switching Light <-> Dark in Warm mode */
+html[data-palette="warm"]:not(.dark) input,
+html[data-palette="warm"][data-theme="light"] input,
+html[data-palette="warm"]:not(.dark) select,
+html[data-palette="warm"][data-theme="light"] select,
+html[data-palette="warm"]:not(.dark) textarea,
+html[data-palette="warm"][data-theme="light"] textarea {
+  background-color: #FFFFFF !important;
+  border-color: #F7C8D3 !important;
+  color: #2D3A47 !important;
+}
+
+html[data-palette="warm"].dark input,
+html[data-palette="warm"][data-theme="dark"] input,
+html[data-palette="warm"].dark select,
+html[data-palette="warm"][data-theme="dark"] select,
+html[data-palette="warm"].dark textarea,
+html[data-palette="warm"][data-theme="dark"] textarea {
+  background-color: #1E080C !important;
+  border-color: #3B1319 !important;
+  color: #F7EFE6 !important;
 }
 
 /* Tiptap editor typography & styles */

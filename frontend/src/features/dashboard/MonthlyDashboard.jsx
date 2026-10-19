@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -8,31 +8,14 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 
 
-  id;
-  title;
-  description;
-  status: TaskStatus;
-  progress;
-  tags[];
-  assignees[];
-  comments;
-  attachments;
-}
-
-  id: TaskStatus;
-  title;
-  color;
-  lightColor;
-}
-
-const COLUMNS: Column[] = [
+const COLUMNS = [
   { id: 'todo', title: 'Todo list', color: '#6366F1', lightColor: '#E0E7FF' },
   { id: 'in_progress', title: 'In Progress', color: '#F59E0B', lightColor: '#FEF3C7' },
   { id: 'in_review', title: 'In Review', color: '#EC4899', lightColor: '#FCE7F3' },
   { id: 'done', title: 'Done', color: '#10B981', lightColor: '#D1FAE5' },
 ];
 
-const SAMPLE_TASKS: Task[] = [
+const SAMPLE_TASKS = [
   {
     id: '1',
     title: 'Search inspirations for upcoming project',
@@ -101,7 +84,7 @@ const SAMPLE_TASKS: Task[] = [
   },
 ];
 
-function ProgressBar({ progress }: { progress }) {
+function ProgressBar({ progress }) {
   const dots = Array.from({ length: 12 }, (_, i) => i);
   const filledDots = Math.round((progress / 100) * 12);
 
@@ -119,7 +102,7 @@ function ProgressBar({ progress }: { progress }) {
   );
 }
 
-function TaskCard({ task, isDark }: { task: Task; isDark }) {
+function TaskCard({ task, isDark }) {
   const column = COLUMNS.find((c) => c.id === task.status);
   if (!column) return null;
 
@@ -244,10 +227,6 @@ function KanbanColumn({
   column,
   tasks,
   isDark,
-}: {
-  column: Column;
-  tasks: Task[];
-  isDark;
 }) {
   return (
     <div className="flex-1 min-w-80 flex flex-col">
@@ -325,7 +304,7 @@ export default function MonthlyDashboard() {
   }, [searchQuery]);
 
   const groupedByStatus = useMemo(() => {
-    const groups = new Map<TaskStatus, Task[]>();
+    const groups = new Map();
     COLUMNS.forEach((col) => groups.set(col.id, []));
     filteredTasks.forEach((task) => {
       const col = groups.get(task.status) || [];
@@ -336,7 +315,7 @@ export default function MonthlyDashboard() {
 
   // Get team member avatars from tasks
   const uniqueAssignees = useMemo(() => {
-    const assignees = new Set<string>();
+    const assignees = new Set();
     SAMPLE_TASKS.forEach((task) => {
       task.assignees.forEach((a) => assignees.add(a));
     });

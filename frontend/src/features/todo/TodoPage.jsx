@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -16,12 +16,12 @@ import { api } from '@/lib/api';
 import { useTheme } from '@/context/ThemeContext';
 
 
-function getMonthKey(dateStr): MonthKey {
+function getMonthKey(dateStr) {
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function formatMonth(key: MonthKey) {
+function formatMonth(key) {
   const [year, month] = key.split('-');
   const d = new Date(Number(year), Number(month) - 1);
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -29,11 +29,11 @@ function formatMonth(key: MonthKey) {
 
 export default function TodoPage() {
   const { isDark } = useTheme();
-  const [allTopics, setAllTopics] = useState<Topic[]>([]);
+  const [allTopics, setAllTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set());
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [expandedTodos, setExpandedTodos] = useState(new Set());
+  const [collapsedMonths, setCollapsedMonths] = useState(new Set());
 
   useEffect(() => {
     api.getAllTopics().then((data) => {
@@ -55,14 +55,14 @@ export default function TodoPage() {
 
   // Group by month
   const monthGroups = useMemo(() => {
-    const groups = new Map<MonthKey, Topic[]>();
+    const groups = new Map();
     const sorted = [...filtered].sort(
       (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     );
     for (const topic of sorted) {
       const key = getMonthKey(topic.updated_at);
       if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(topic);
+      groups.get(key).push(topic);
     }
     return groups;
   }, [filtered]);
@@ -76,7 +76,7 @@ export default function TodoPage() {
     });
   };
 
-  const toggleMonth = (key: MonthKey) => {
+  const toggleMonth = (key) => {
     setCollapsedMonths((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -250,16 +250,6 @@ export default function TodoPage() {
   );
 }
 
-  monthKey: MonthKey;
-  topics: Topic[];
-  isDark;
-  collapsed;
-  onToggleMonth: () => void;
-  expandedTodos: Set<string>;
-  onToggleExpand: (id) => void;
-  onChecklistToggle: (topicId, checklistItemId) => void;
-}
-
 function MonthSection({
   monthKey,
   topics,
@@ -269,7 +259,7 @@ function MonthSection({
   expandedTodos,
   onToggleExpand,
   onChecklistToggle,
-}: MonthSectionProps) {
+}) {
   const doneCount = topics.filter((t) => t.status === 'done').length;
 
   return (
@@ -315,15 +305,8 @@ function MonthSection({
   );
 }
 
-  topic: Topic;
-  isDark;
-  expanded;
-  onToggle: () => void;
-  onChecklistToggle: (topicId, checklistItemId) => void;
-}
-
-function TodoItem({ topic, isDark, expanded, onToggle, onChecklistToggle }: TodoItemProps) {
-  const getStatusConfig = (status: TopicStatus) => {
+function TodoItem({ topic, isDark, expanded, onToggle, onChecklistToggle }) {
+  const getStatusConfig = (status) => {
     switch (status) {
       case 'todo':
         return { icon: Clock, color: isDark ? '#C6B39A' : '#B46A72', label: 'Todo' };

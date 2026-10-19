@@ -1,14 +1,5 @@
-﻿
-  icon: LucideIcon;
-  title;
-  description;
-  action?: {
-    label;
-    onClick: () => void;
-  };
-}
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-surface-100 mb-5">

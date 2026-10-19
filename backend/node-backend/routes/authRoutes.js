@@ -12,24 +12,37 @@ const generateToken = (id) => {
 };
 
 // Register user
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, error: 'Please add all fields' });
+      res.status(400);
+      throw new Error('Please provide name, email, and password');
     }
 
-    const userExists = await User.findOne({ email });
+    if (password.length < 6) {
+      res.status(400);
+      throw new Error('Password must be at least 6 characters long');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400);
+      throw new Error('Please provide a valid email address');
+    }
+
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
-      return res.status(400).json({ success: false, error: 'User already exists' });
+      res.status(400);
+      throw new Error('User already exists with this email');
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword
     });
 
@@ -44,18 +57,24 @@ router.post('/register', async (req, res) => {
         }
       });
     } else {
-      res.status(400).json({ success: false, error: 'Invalid user data' });
+      res.status(400);
+      throw new Error('Invalid user data received');
     }
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
 // Login user
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      res.status(400);
+      throw new Error('Please provide email and password');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
@@ -68,10 +87,11 @@ router.post('/login', async (req, res) => {
         }
       });
     } else {
-      res.status(401).json({ success: false, error: 'Invalid email or password' });
+      res.status(401);
+      throw new Error('Invalid email or password');
     }
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 

@@ -185,13 +185,17 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
         {!collapsed && (
           <div
             className={`p-3.5 rounded-2xl border text-xs leading-relaxed ${
-              isDark
-                ? 'bg-[#3B1319]/60 border-[#7B694E]/30 text-[#C6B39A]'
-                : 'bg-[#F7C8D3]/20 border-[#F7C8D3] text-[#2D3A47]'
+              isNotion
+                ? isDark
+                  ? 'bg-[#252525] border-[#373737] text-[#D4D4D4]'
+                  : 'bg-[#EFEFED]/70 border-[#E9E9E7] text-[#37352F]'
+                : isDark
+                  ? 'bg-[#3B1319]/60 border-[#7B694E]/30 text-[#C6B39A]'
+                  : 'bg-[#F7C8D3]/20 border-[#F7C8D3] text-[#2D3A47]'
             }`}
           >
-            <div className="flex items-center gap-1.5 font-bold mb-1 text-[#B46A72]">
-              <Sparkles size={14} />
+            <div className={`flex items-center gap-1.5 font-bold mb-1 ${isNotion ? 'text-inherit' : 'text-[#B46A72]'}`}>
+              <Sparkles size={14} className={isNotion ? 'text-[#37352F] dark:text-[#D4D4D4]' : ''} />
               <span>Study Focus</span>
             </div>
             <p className="opacity-80">
@@ -204,13 +208,19 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
       {/* Footer Profile & Theme Toggle */}
       <div
         className={`p-3 border-t border-inherit ${
-          isDark ? 'bg-[#280B0F]' : 'bg-[#FFF5F6]'
+          isNotion
+            ? isDark
+              ? 'bg-[#202020]'
+              : 'bg-[#F7F7F5]'
+            : isDark
+              ? 'bg-[#280B0F]'
+              : 'bg-[#FFF5F6]'
         }`}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-[#B46A72] text-white font-bold flex items-center justify-center text-sm shadow-sm ring-2 ring-white/20">
+              <div className={`w-9 h-9 rounded-full ${isNotion ? 'bg-[#37352F] text-white dark:bg-[#373737]' : 'bg-[#B46A72] text-white'} font-bold flex items-center justify-center text-sm shadow-sm ring-2 ring-white/20`}>
                 BS
               </div>
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#A8B58A] ring-2 ring-white" />
@@ -232,10 +242,14 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
               type="button"
               onClick={handleLogout}
               title="Log out"
-              className={`p-2 rounded-xl transition-all ${
-                isDark
-                  ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-rose-500/20 hover:text-rose-400'
-                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-rose-500/10 hover:text-rose-500'
+              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                isNotion
+                  ? isDark
+                    ? 'bg-[#2F2F2F] text-[#D4D4D4] hover:bg-rose-500/20 hover:text-rose-400'
+                    : 'bg-[#EFEFED] text-[#37352F] hover:bg-rose-500/10 hover:text-rose-500'
+                  : isDark
+                    ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-rose-500/20 hover:text-rose-400'
+                    : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-rose-500/10 hover:text-rose-500'
               }`}
             >
               <LogOut size={16} />
@@ -243,11 +257,23 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
             <button
               type="button"
               onClick={toggleTheme}
-              title={isDark ? 'Switch to Light Mood (Vanilla Cream)' : 'Switch to Dark Mood (Italian Roast)'}
-              className={`p-2 rounded-xl transition-all ${
-                isDark
-                  ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#7B694E]/40'
-                  : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
+              title={
+                isNotion
+                  ? isDark
+                    ? 'Switch to Notion Light (#FFFFFF)'
+                    : 'Switch to Notion Dark (#191919)'
+                  : isDark
+                    ? 'Switch to Light Mood (Vanilla Cream)'
+                    : 'Switch to Dark Mood (Italian Roast)'
+              }
+              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                isNotion
+                  ? isDark
+                    ? 'bg-[#2F2F2F] text-[#D4D4D4] hover:bg-[#373737]'
+                    : 'bg-[#EFEFED] text-[#37352F] hover:bg-[#E9E9E7]'
+                  : isDark
+                    ? 'bg-[#3B1319] text-[#C6B39A] hover:bg-[#7B694E]/40'
+                    : 'bg-[#F7C8D3]/30 text-[#2D3A47] hover:bg-[#F7C8D3]/50'
               }`}
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -279,6 +305,8 @@ function NavItem({
   collapsed,
   isDark,
 }) {
+  const { isNotion } = useTheme();
+
   return (
     <NavLink
       to={to}
@@ -286,12 +314,20 @@ function NavItem({
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
           isActive
-            ? isDark
-              ? 'bg-[#3B1319] text-white shadow-sm font-semibold'
-              : 'bg-[#2D3A47] text-white shadow-sm font-semibold'
-            : isDark
-            ? 'text-[#C6B39A]/80 hover:bg-[#3B1319]/50 hover:text-white'
-            : 'text-[#2D3A47]/80 hover:bg-[#F7C8D3]/30 hover:text-[#2D3A47]'
+            ? isNotion
+              ? isDark
+                ? 'bg-[#2F2F2F] text-white shadow-sm font-semibold border border-[#373737]'
+                : 'bg-[#37352F] text-white shadow-sm font-semibold'
+              : isDark
+                ? 'bg-[#3B1319] text-white shadow-sm font-semibold'
+                : 'bg-[#2D3A47] text-white shadow-sm font-semibold'
+            : isNotion
+              ? isDark
+                ? 'text-[#9B9A97] hover:bg-[#2F2F2F] hover:text-[#D4D4D4]'
+                : 'text-[#787774] hover:bg-[#EFEFED] hover:text-[#37352F]'
+              : isDark
+                ? 'text-[#C6B39A]/80 hover:bg-[#3B1319]/50 hover:text-white'
+                : 'text-[#2D3A47]/80 hover:bg-[#F7C8D3]/30 hover:text-[#2D3A47]'
         } ${collapsed ? 'justify-center px-2 w-12 h-12 mx-auto' : ''}`
       }
     >
