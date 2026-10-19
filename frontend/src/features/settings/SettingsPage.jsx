@@ -44,6 +44,13 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const handleLogout = () => {
+    if (confirm('Are you sure you want to log out of Notie?')) {
+      localStorage.removeItem('notie_auth');
+      window.location.href = '/login';
+    }
+  };
+
   const tabs = [
     { id: 'account', label: 'Account Settings', icon: User },
     { id: 'security', label: 'Security & Auth', icon: Shield },
