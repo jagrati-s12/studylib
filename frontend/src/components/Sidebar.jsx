@@ -111,13 +111,6 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
               isDark={isDark}
             />
             <NavItem
-              to="/flashcards"
-              icon={Brain}
-              label="Flashcards"
-              collapsed={collapsed}
-              isDark={isDark}
-            />
-            <NavItem
               to="/pomodoro"
               icon={Timer}
               label="Pomodoro"
@@ -135,13 +128,6 @@ export function Sidebar({ collapsed = false, onToggle, topicCount = 14 }) {
               to="/exam-prep"
               icon={GraduationCap}
               label="Exam Prep"
-              collapsed={collapsed}
-              isDark={isDark}
-            />
-            <NavItem
-              to="/question-bank"
-              icon={BookMarked}
-              label="Question Bank"
               collapsed={collapsed}
               isDark={isDark}
             />

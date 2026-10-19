@@ -151,8 +151,8 @@ export default function AnalyticsPage() {
               <Brain size={22} />
             </span>
             <div>
-              <h3 className="font-display font-bold text-lg">Student Success Neural & Logistic Regression Engine</h3>
-              <p className="text-xs opacity-70">Train model weights using student telemetry features to predict exam pass probabilities.</p>
+              <h3 className="font-display font-bold text-lg">Student Success Analytics Engine</h3>
+              <p className="text-xs opacity-70">Monitor study telemetry features, performance trends, and exam pass probabilities.</p>
             </div>
           </div>
 
