@@ -6,22 +6,69 @@ import {
   Clock,
   Flame,
   CheckCircle2,
-  BookOpen,
   Award,
-  Calendar,
-  ArrowUpRight,
-  Sparkles
+  Sparkles,
+  Cpu,
+  Play,
+  RotateCcw,
+  ShieldCheck,
+  Brain
 } from 'lucide-react';
+import { studentModel, historicalTrainingDataset } from './mlModelEngine';
 
 export default function AnalyticsPage() {
   const { isDark } = useTheme();
 
-  // Mock analytics data
+  // Student Telemetry State for ML Prediction
+  const [studentRecord, setStudentRecord] = useState({
+    weeklyHours: 32.5,
+    streakDays: 7,
+    avgConfidence: 4.2,
+    completionRate: 82
+  });
+
+  // ML Training Simulation State
+  const [isTraining, setIsTraining] = useState(false);
+  const [trainingEpoch, setTrainingEpoch] = useState(0);
+  const [currentLoss, setCurrentLoss] = useState(0.4852);
+  const [modelWeights, setModelWeights] = useState({ ...studentModel.weights });
+
+  // Calculated Exam Success Probability (ESP)
+  const successProbability = studentModel.predictSuccess(studentRecord);
+  const recommendations = studentModel.getRecommendations(studentRecord);
+
+  // Trigger Training Epochs
+  const handleTrainModel = () => {
+    setIsTraining(true);
+    let epoch = 0;
+    const interval = setInterval(() => {
+      epoch += 1;
+      const result = studentModel.trainEpoch(historicalTrainingDataset);
+      setTrainingEpoch(epoch);
+      setCurrentLoss(result.loss);
+      setModelWeights({ ...result.weights });
+
+      if (epoch >= 15) {
+        clearInterval(interval);
+        setIsTraining(false);
+      }
+    }, 150);
+  };
+
+  const handleResetModel = () => {
+    studentModel.weights = { studyHours: 0.35, streakLength: 0.20, confidenceRating: 0.25, completionRate: 0.20 };
+    studentModel.bias = -0.5;
+    setModelWeights({ ...studentModel.weights });
+    setTrainingEpoch(0);
+    setCurrentLoss(0.4852);
+  };
+
+  // Mock analytics stats
   const stats = [
-    { label: 'Total Study Hours', value: '48.5 hrs', change: '+12% this week', icon: Clock, color: 'text-[#B46A72]' },
-    { label: 'Current Streak', value: '7 Days', change: 'Personal best!', icon: Flame, color: 'text-[#E0A96D]' },
-    { label: 'Completion Rate', value: '82%', change: '+5.4% vs last week', icon: CheckCircle2, color: 'text-[#6B7C50]' },
-    { label: 'Exams Mastered', value: '3 / 4', change: 'On track', icon: Award, color: 'text-[#3b82f6]' },
+    { label: 'Total Study Hours', value: `${studentRecord.weeklyHours} hrs`, change: '+12% this week', icon: Clock, color: 'text-[#B46A72]' },
+    { label: 'Current Streak', value: `${studentRecord.streakDays} Days`, change: 'Personal best!', icon: Flame, color: 'text-[#E0A96D]' },
+    { label: 'Completion Rate', value: `${studentRecord.completionRate}%`, change: '+5.4% vs last week', icon: CheckCircle2, color: 'text-[#6B7C50]' },
+    { label: 'Exam Success (AI)', value: `${successProbability}%`, change: 'High confidence', icon: Award, color: 'text-[#3b82f6]' },
   ];
 
   const subjectProgress = [
@@ -52,17 +99,17 @@ export default function AnalyticsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 text-[#B46A72]">
             <BarChart2 size={16} />
-            <span>Performance Metrics</span>
+            <span>Performance Metrics & ML Training</span>
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Analytics & Progress Dashboard</h1>
-          <p className="text-sm opacity-70 mt-1">Track your study hours, daily streaks, and subject completion rates.</p>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Analytics & AI Model Dashboard</h1>
+          <p className="text-sm opacity-70 mt-1">Train student telemetry models, simulate success probabilities, and track study milestones.</p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${
             isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3]'
           }`}>
-            📅 October 2026 Academic Term
+            🤖 ML Predictive Engine v2.4 Active
           </span>
         </div>
       </div>
@@ -94,6 +141,178 @@ export default function AnalyticsPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* ML Model Training & Telemetry Simulator Section */}
+      <div className={`p-6 rounded-2xl border mb-8 ${isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3] shadow-sm'}`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-inherit mb-6">
+          <div className="flex items-center gap-3">
+            <span className="p-2.5 rounded-xl bg-[#B46A72] text-white">
+              <Brain size={22} />
+            </span>
+            <div>
+              <h3 className="font-display font-bold text-lg">Student Success Neural & Logistic Regression Engine</h3>
+              <p className="text-xs opacity-70">Train model weights using student telemetry features to predict exam pass probabilities.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleTrainModel}
+              disabled={isTraining}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-2 cursor-pointer ${
+                isTraining ? 'bg-amber-600 text-white opacity-80' : 'bg-[#B46A72] hover:bg-[#9f5960] text-white'
+              }`}
+            >
+              <Play size={14} /> {isTraining ? `Training Epoch ${trainingEpoch}/15...` : 'Train Model Weights'}
+            </button>
+            <button
+              onClick={handleResetModel}
+              className={`p-2.5 rounded-xl border transition cursor-pointer ${
+                isDark ? 'border-[#3B1319] hover:bg-[#3B1319]' : 'border-[#F7C8D3] hover:bg-[#FFF5F6]'
+              }`}
+              title="Reset weights"
+            >
+              <RotateCcw size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Telemetry Sliders / Controls */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <Cpu size={16} className="text-[#B46A72]" /> Student Telemetry Controls
+            </h4>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="opacity-75">Weekly Study Hours ({studentRecord.weeklyHours}h)</span>
+                  <span className="font-bold">{studentRecord.weeklyHours}h</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="50"
+                  step="0.5"
+                  value={studentRecord.weeklyHours}
+                  onChange={(e) => setStudentRecord({ ...studentRecord, weeklyHours: Number(e.target.value) })}
+                  className="w-full accent-[#B46A72]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="opacity-75">Study Streak Days ({studentRecord.streakDays} Days)</span>
+                  <span className="font-bold">{studentRecord.streakDays}d</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="21"
+                  step="1"
+                  value={studentRecord.streakDays}
+                  onChange={(e) => setStudentRecord({ ...studentRecord, streakDays: Number(e.target.value) })}
+                  className="w-full accent-[#B46A72]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="opacity-75">Average Confidence ({studentRecord.avgConfidence}/5)</span>
+                  <span className="font-bold">{studentRecord.avgConfidence}/5</span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="5.0"
+                  step="0.1"
+                  value={studentRecord.avgConfidence}
+                  onChange={(e) => setStudentRecord({ ...studentRecord, avgConfidence: Number(e.target.value) })}
+                  className="w-full accent-[#B46A72]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="opacity-75">Syllabus Completion Rate ({studentRecord.completionRate}%)</span>
+                  <span className="font-bold">{studentRecord.completionRate}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="1"
+                  value={studentRecord.completionRate}
+                  onChange={(e) => setStudentRecord({ ...studentRecord, completionRate: Number(e.target.value) })}
+                  className="w-full accent-[#B46A72]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Model Weights & Loss Metrics */}
+          <div className={`p-4 rounded-2xl border space-y-4 ${isDark ? 'bg-[#1E080C] border-[#3B1319]' : 'bg-[#FFF5F6]/60 border-[#F7C8D3]'}`}>
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm">Model Loss & Convergence</h4>
+              <span className="text-xs font-mono font-bold text-[#6B7C50]">Loss: {currentLoss}</span>
+            </div>
+
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="opacity-70">Weight (Study Hours):</span>
+                <span>{modelWeights.studyHours.toFixed(3)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="opacity-70">Weight (Streak):</span>
+                <span>{modelWeights.streakLength.toFixed(3)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="opacity-70">Weight (Confidence):</span>
+                <span>{modelWeights.confidenceRating.toFixed(3)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="opacity-70">Weight (Completion):</span>
+                <span>{modelWeights.completionRate.toFixed(3)}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-inherit flex items-center justify-between text-xs">
+              <span className="opacity-70">Trained Epochs:</span>
+              <span className="font-bold">{trainingEpoch} / 15</span>
+            </div>
+          </div>
+
+          {/* Prediction Output & Recommendations */}
+          <div className="flex flex-col justify-between">
+            <div className={`p-4 rounded-2xl border ${isDark ? 'bg-[#1E080C] border-[#3B1319]' : 'bg-[#FFF5F6]/60 border-[#F7C8D3]'}`}>
+              <div className="flex items-center gap-2 mb-2 text-[#B46A72] font-bold text-xs uppercase tracking-wider">
+                <ShieldCheck size={16} /> Predicted Exam Success Probability
+              </div>
+              <div className="text-4xl font-display font-black tracking-tight mb-1 text-inherit">
+                {successProbability}%
+              </div>
+              <p className="text-xs opacity-70">
+                {successProbability >= 80 ? '🟢 Excellent trajectory. High probability of top exam scores.' : successProbability >= 60 ? '🟡 Good progress. Focus on weak subjects to boost score.' : '🔴 Action required. Increase study hours & chapter completion.'}
+              </p>
+            </div>
+
+            <div className="mt-3">
+              <h5 className="text-xs font-bold uppercase tracking-wider opacity-70 mb-2">AI Recommendations:</h5>
+              <div className="space-y-1.5 text-xs">
+                {recommendations.map((rec, i) => (
+                  <div key={i} className="p-2 rounded-xl bg-black/5 dark:bg-white/5 flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B46A72] mt-1.5 shrink-0" />
+                    <div>
+                      <span className="font-bold">{rec.title}:</span> <span className="opacity-80">{rec.description}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Charts Section */}
