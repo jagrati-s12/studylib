@@ -1,144 +1,66 @@
-# Personal Study Library & Notes App
+# Notie Study & Notes Application 📚
 
-A modern, feature-rich study library, notes, and task management application built with React, TypeScript, and Vite. Organize your subjects, indexed chapters, materials (PDFs, PPTs, handwritten notes, digital notes in folders), and manage todos with checklists and due dates across day, week, and month views.
+Notie is a professional, feature-rich MERN stack study and research workspace designed for students and researchers. It features split-screen document viewing (PDFs, PPTs, handwritten notes), digital note-taking, AI-powered study assistance, a Pomodoro timer, DSA progress tracker, exam prep, and multi-tenant database persistence.
 
-## Features
+---
 
-- **Enhanced Todo Management**: Create todos with interactive checklists and due dates, filterable by All, Day, Week, and Month views.
-- **Subject & Indexed Topic Drill-Down**: Custom subject color presets and Lucide icon picker, clickable subject cards with indexed chapters/topics (`#1`, `#2`, etc.).
-- **Nested Material Folders**: Organize study materials into custom folders (digital notes, PDFs, lecture notes, attachments) with multi-pane split viewing.
-- **Rich Text Editor**: Full-featured editor for note-taking and documentation.
-- **Modern UI & Dark Mode**: Clean interface built with Tailwind CSS with seamless dark/light theme support.
-- **Fast Development**: Powered by Vite and TypeScript for type safety and speed.
+## 🚀 Key Features
 
-## Tech Stack
+- **Split-Screen Workspace**: Open up to 4 synchronized panes simultaneously to view PDF materials, PPT slides, handwritten notes, and digital notes side-by-side.
+- **Indexed Chapters & Subtopics**: Organize subjects with serial numbered chapters and fractional subtopics (`1.1`, `1.2`, etc.).
+- **Files & Folders Hierarchy**: Browse and upload materials organized into folders per topic.
+- **Digital Notes & Rich Text**: Create and auto-save comprehensive notes for every topic.
+- **AI Study Assistant**: Get instant study advice, summaries, and analytics insights.
+- **Pomodoro Timer & Planner**: Maintain productivity and track your study schedule.
+- **Dark Mode Support**: Seamless theme toggling with custom dark color palettes (`#280B0F`).
 
-### Core
-- **React 19.2** - UI library
-- **TypeScript 6.0** - Type safety and better DX
-- **Vite 8.3** - Build tool and dev server
+---
 
-### UI & Styling
-- **Tailwind CSS 4.3** - Utility-first CSS framework
-- **Lucide React** - Beautiful icon library
-- **React Resizable Panels** - Flexible layout components
+## 🛠️ Tech Stack
 
-### Editor
-- **Tiptap** - Headless rich text editor
-  - Starter Kit for common extensions
-  - Placeholder support
-  - Underline extension
+- **Frontend**: React, Vite, Tailwind CSS, React Router, Lucide Icons, TanStack React Query.
+- **Backend**: Node.js, Express.js, MongoDB (Mongoose), JWT Authentication, bcrypt.
+- **AI Service**: Python Flask, Google Gemini AI microservice.
 
-### Utilities
-- **React Router DOM** - Client-side routing
-- **TanStack Query** - Data fetching and state management
-- **UUID** - Unique identifier generation
+---
 
-### Development Tools
-- **Oxlint** - Fast JavaScript/TypeScript linter
-- **Vite Plugin React** - React support for Vite
+## ⚙️ Getting Started & Database Management
 
-## Getting Started
+### 1. Prerequisites
+- Node.js (v18+)
+- Python (v3.10+)
+- MongoDB (Running locally or via MongoDB Atlas connection string)
 
-### Prerequisites
-
-- Node.js (v18 or higher recommended)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
+### 2. Backend Setup
 ```bash
-git clone <repository-url>
-cd "notes app"
-```
-
-2. Navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-3. Install dependencies:
-```bash
+cd backend/node-backend
 npm install
 ```
-
-### Development
-
-Start the development server:
+Create a `.env` file in `backend/node-backend/`:
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/notie_db
+JWT_SECRET=your_secure_jwt_secret
+PYTHON_AI_URL=http://localhost:5001
+```
+Start the backend server:
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173` (or another port if 5173 is busy).
-
-### Building for Production
-
-Create an optimized production build:
+### 3. Frontend Setup
 ```bash
-npm run build
+cd frontend
+npm install
+npm run dev
 ```
 
-The built files will be in the `dist` directory.
-
-### Preview Production Build
-
-Preview the production build locally:
-```bash
-npm run preview
-```
-
-### Linting
-
-Run the linter:
-```bash
-npm run lint
-```
-
-## Project Structure
-
-```
-notes app/
-├── frontend/
-│   ├── src/              # Source files
-│   ├── public/           # Static assets
-│   ├── dist/             # Production build
-│   ├── index.html        # Entry HTML file
-│   ├── package.json      # Dependencies and scripts
-│   ├── tsconfig.json     # TypeScript configuration
-│   ├── vite.config.ts    # Vite configuration
-│   └── .oxlintrc.json    # Linter configuration
-├── ui design/            # Design files and mockups
-└── README.md             # This file
-```
-
-## Configuration Files
-
-- **tsconfig.json** - Base TypeScript configuration
-- **tsconfig.app.json** - App-specific TypeScript settings
-- **tsconfig.node.json** - Node-specific TypeScript settings
-- **vite.config.ts** - Vite build and dev server configuration
-- **.oxlintrc.json** - Oxlint linting rules
-- **.gitignore** - Git ignore patterns
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Make your changes
-3. Run linting and ensure the build passes
-4. Commit your changes with clear, descriptive messages
-5. Push to your branch and create a pull request
-
-## License
-
-This project is private and not currently licensed for public use.
-
-## Support
-
-For issues or questions, please open an issue in the repository.
+### 4. Database Management
+- **MongoDB Compass / mongosh**: Connect to your `notie_db` database instance to manage collections (`users`, `subjects`, `topics`, `materials`, `folders`, `digitalnotes`) securely.
 
 ---
 
-Built with ❤️ using React and TypeScript
+## 📄 License & Attribution
 
-
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Co-Authored-By: Claude Code <noreply@anthropic.com>
