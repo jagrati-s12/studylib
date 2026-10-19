@@ -99,18 +99,10 @@ export default function AnalyticsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-1 text-[#B46A72]">
             <BarChart2 size={16} />
-            <span>Performance Metrics & ML Training</span>
+            <span>Performance Metrics</span>
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Analytics & AI Model Dashboard</h1>
-          <p className="text-sm opacity-70 mt-1">Train student telemetry models, simulate success probabilities, and track study milestones.</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${
-            isDark ? 'bg-[#280B0F] border-[#3B1319]' : 'bg-white border-[#F7C8D3]'
-          }`}>
-            🤖 ML Predictive Engine v2.4 Active
-          </span>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Analytics & Study Performance</h1>
+          <p className="text-sm opacity-70 mt-1">Track study hours, weekly milestones, and subject mastery progress.</p>
         </div>
       </div>
 
