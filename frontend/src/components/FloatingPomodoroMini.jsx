@@ -26,11 +26,10 @@ export default function FloatingPomodoroMini() {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // If user is already on the /pomodoro page, we don't need to show the floating mini widget
+  // If user is already on the /pomodoro page, or if the timer is NOT running (not started), do not show the mini player
   const isOnPomodoroPage = location.pathname === '/pomodoro';
 
-  // Only show if timer is running OR user explicitly opened/hasn't dismissed
-  if (isOnPomodoroPage || miniDismissed) {
+  if (isOnPomodoroPage || !isRunning || miniDismissed) {
     return null;
   }
 
