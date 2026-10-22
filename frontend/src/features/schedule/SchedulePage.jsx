@@ -31,95 +31,9 @@ const getSampleDate = (dayOffset, hour, minute = 0) => {
   return `${year}-${month}-${day}T${h}:${m}:00`;
 };
 
-const INITIAL_EVENTS = [
-  {
-    id: '1',
-    title: 'UX Huddle Call',
-    start: getSampleDate(0, 9, 0),
-    end: getSampleDate(0, 9, 30),
-    color: '#768E78', // Fern
-    attendees: 2,
-    day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-  },
-  {
-    id: '2',
-    title: 'Analytics Kickoff – Formix Insights',
-    start: getSampleDate(1, 10, 0),
-    end: getSampleDate(1, 11, 0),
-    color: '#FECDBE', // Cherry Blossom
-    attendees: 3,
-    day: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
-  },
-  {
-    id: '3',
-    title: 'Standup Meeting – NovaBoard Team',
-    start: getSampleDate(-1, 9, 45),
-    end: getSampleDate(-1, 10, 45),
-    color: '#B7CBDB', // Bluebell
-    attendees: 5,
-    day: new Date(Date.now() - 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
-  },
-  {
-    id: '4',
-    title: 'Frontend Dev Sync – API Mapping Task',
-    start: getSampleDate(2, 10, 0),
-    end: getSampleDate(2, 11, 45),
-    color: '#FCC88A', // Honey
-    attendees: 4,
-    day: new Date(Date.now() + 2 * 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
-  },
-  {
-    id: '5',
-    title: 'Design Sync – Website Revamp',
-    start: getSampleDate(0, 14, 0),
-    end: getSampleDate(0, 14, 45),
-    color: '#E79897', // Peony
-    attendees: 3,
-    day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-  },
-];
+const INITIAL_EVENTS = [];
 
-const GOOGLE_CALENDAR_SAMPLE_EVENTS = [
-  {
-    id: 'g-1',
-    title: 'Google Calendar: Machine Learning Lecture',
-    start: getSampleDate(0, 11, 0),
-    end: getSampleDate(0, 12, 30),
-    color: '#4285F4',
-    attendees: 45,
-    day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-    isGoogle: true,
-    location: 'Auditorium Hall B & Google Meet',
-    description: 'Weekly CS504 lecture covering Neural Networks and Backpropagation.',
-    htmlLink: 'https://calendar.google.com',
-  },
-  {
-    id: 'g-2',
-    title: 'Google Calendar: Study Group - React App',
-    start: getSampleDate(1, 14, 0),
-    end: getSampleDate(1, 15, 30),
-    color: '#4285F4',
-    attendees: 4,
-    day: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
-    isGoogle: true,
-    location: 'Google Meet (meet.google.com/abc-defg-hij)',
-    description: 'Discussing state management and API routes.',
-    htmlLink: 'https://calendar.google.com',
-  },
-  {
-    id: 'g-3',
-    title: 'Google Calendar: Project Milestone Review',
-    start: getSampleDate(2, 13, 0),
-    end: getSampleDate(2, 14, 0),
-    color: '#4285F4',
-    attendees: 8,
-    day: new Date(Date.now() + 2 * 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
-    isGoogle: true,
-    location: 'Conference Room 3',
-    description: 'Milestone 2 progress sign-off with advisors.',
-    htmlLink: 'https://calendar.google.com',
-  },
-];
+const GOOGLE_CALENDAR_SAMPLE_EVENTS = [];
 
 const formatDateKey = (date) => {
   const d = date instanceof Date ? date : new Date(date);
