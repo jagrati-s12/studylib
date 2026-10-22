@@ -22,10 +22,10 @@ export default function AnalyticsPage() {
 
   // Student Telemetry State for ML Prediction
   const [studentRecord, setStudentRecord] = useState({
-    weeklyHours: 12.5,
-    streakDays: 7,
-    avgConfidence: 4.3,
-    completionRate: 82,
+    weeklyHours: 0,
+    streakDays: 0,
+    avgConfidence: 0,
+    completionRate: 0,
     totalSessions: 0,
     totalStudyMinutes: 0,
     subjectsCount: 0,
@@ -40,10 +40,10 @@ export default function AnalyticsPage() {
         const data = await api.getAnalytics();
         if (data) {
           setStudentRecord({
-            weeklyHours: data.weeklyHours || 12.5,
-            streakDays: data.streakDays || 7,
-            avgConfidence: data.avgConfidence || 4.3,
-            completionRate: data.completionRate || 82,
+            weeklyHours: data.weeklyHours || 0,
+            streakDays: data.streakDays || 0,
+            avgConfidence: data.avgConfidence || 0,
+            completionRate: data.completionRate || 0,
             totalSessions: data.totalSessions || 0,
             totalStudyMinutes: data.totalStudyMinutes || 0,
             subjectsCount: data.subjectsCount || 0,
@@ -97,31 +97,23 @@ export default function AnalyticsPage() {
 
   // Mock analytics stats
   const stats = [
-    { label: 'Total Study Hours', value: `${studentRecord.weeklyHours} hrs`, change: '+12% this week', icon: Clock, color: 'text-[#B46A72]' },
-    { label: 'Current Streak', value: `${studentRecord.streakDays} Days`, change: 'Personal best!', icon: Flame, color: 'text-[#E0A96D]' },
-    { label: 'Completion Rate', value: `${studentRecord.completionRate}%`, change: '+5.4% vs last week', icon: CheckCircle2, color: 'text-[#6B7C50]' },
-    { label: 'Exam Success (AI)', value: `${successProbability}%`, change: 'High confidence', icon: Award, color: 'text-[#3b82f6]' },
-  ];
-
-  const subjectProgress = [
-    { name: 'Data Mining', progress: 85, color: '#3b82f6', hours: 14.5, topics: '10/12' },
-    { name: 'Machine Learning', progress: 70, color: '#8b5cf6', hours: 12.0, topics: '8/12' },
-    { name: 'Database Systems', progress: 95, color: '#22c55e', hours: 10.5, topics: '6/6' },
-    { name: 'Operating Systems', progress: 60, color: '#ef4444', hours: 7.5, topics: '6/10' },
-    { name: 'Computer Networks', progress: 45, color: '#14b8a6', hours: 4.0, topics: '4/9' },
+    { label: 'Total Study Hours', value: `${studentRecord.weeklyHours} hrs`, change: studentRecord.weeklyHours > 0 ? '+12% this week' : 'No data yet', icon: Clock, color: 'text-[#B46A72]' },
+    { label: 'Current Streak', value: `${studentRecord.streakDays} Days`, change: studentRecord.streakDays > 0 ? 'Active streak' : 'Start studying', icon: Flame, color: 'text-[#E0A96D]' },
+    { label: 'Completion Rate', value: `${studentRecord.completionRate}%`, change: studentRecord.completionRate > 0 ? 'On track' : 'No topics completed', icon: CheckCircle2, color: 'text-[#6B7C50]' },
+    { label: 'Exam Success (AI)', value: `${successProbability}%`, change: studentRecord.topicsCount > 0 ? 'Calculated' : 'Awaiting telemetry', icon: Award, color: 'text-[#3b82f6]' },
   ];
 
   const weeklyActivity = [
-    { day: 'Mon', hours: 4.5 },
-    { day: 'Tue', hours: 6.2 },
-    { day: 'Wed', hours: 3.8 },
-    { day: 'Thu', hours: 7.0 },
-    { day: 'Fri', hours: 5.5 },
-    { day: 'Sat', hours: 8.0 },
-    { day: 'Sun', hours: 3.5 },
+    { day: 'Mon', hours: 0 },
+    { day: 'Tue', hours: 0 },
+    { day: 'Wed', hours: 0 },
+    { day: 'Thu', hours: 0 },
+    { day: 'Fri', hours: 0 },
+    { day: 'Sat', hours: 0 },
+    { day: 'Sun', hours: 0 },
   ];
 
-  const maxHours = Math.max(...weeklyActivity.map(w => w.hours));
+  const maxHours = Math.max(...weeklyActivity.map(w => w.hours), 1);
 
   return (
     <div className={`flex-1 min-h-screen p-8 transition-colors ${
@@ -194,7 +186,7 @@ export default function AnalyticsPage() {
                 ? isDark ? 'bg-[#252525] text-[#D4D4D4] border border-[#373737]' : 'bg-[#EFEFED] text-[#37352F] border border-[#E9E9E7]'
                 : 'bg-[#B46A72]/10 text-[#B46A72]'
             }`}>
-              Avg 5.5 hrs/day
+              Avg 0 hrs/day
             </span>
           </div>
 
@@ -212,7 +204,7 @@ export default function AnalyticsPage() {
                         ? isDark ? 'bg-[#D4D4D4] group-hover:bg-white' : 'bg-[#37352F] group-hover:bg-[#202020]'
                         : 'bg-[#B46A72] group-hover:bg-[#9f5960]'
                     }`}
-                    style={{ height: `${heightPercent}%` }}
+                    style={{ height: `${Math.max(heightPercent, 4)}%` }}
                   />
                   <span className="text-xs font-medium opacity-70 pb-1">{item.day}</span>
                 </div>
@@ -236,7 +228,7 @@ export default function AnalyticsPage() {
             </div>
             <h3 className="font-display font-bold text-lg mb-2">Smart Insights</h3>
             <p className="text-sm opacity-80 leading-relaxed mb-4">
-              You are most productive during morning hours (9 AM - 12 PM). Your weakest subject is <strong>Computer Networks</strong> — recommend spending 2 hours reviewing TCP/IP protocols today.
+              Add your subjects and study sessions to receive personalized AI study recommendations and productivity insights here.
             </p>
           </div>
 
@@ -246,7 +238,7 @@ export default function AnalyticsPage() {
               : isDark ? 'bg-[#1E080C] border-[#3B1319]' : 'bg-[#FFF5F6] border-[#F7C8D3]'
           }`}>
             <p className="font-semibold mb-1">🎯 Goal for today:</p>
-            <p className="opacity-75">Complete 2 chapters of Exam Prep & clear 5 mistake notebook items.</p>
+            <p className="opacity-75">Create your first subject and start tracking your study sessions.</p>
           </div>
         </div>
 
@@ -260,30 +252,15 @@ export default function AnalyticsPage() {
       }`}>
         <h3 className="font-display font-bold text-lg mb-6">Subject Completion Rates</h3>
 
-        <div className="space-y-5">
-          {subjectProgress.map((subj, idx) => (
-            <div key={idx} className="space-y-2">
-              <div className="flex items-center justify-between text-sm font-semibold">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: subj.color }} />
-                  <span>{subj.name}</span>
-                </div>
-                <div className="flex items-center gap-4 text-xs opacity-80">
-                  <span>{subj.hours} hrs</span>
-                  <span>{subj.topics} topics</span>
-                  <span className="font-bold">{subj.progress}%</span>
-                </div>
-              </div>
-
-              <div className="w-full h-2.5 rounded-full bg-black/10 dark:bg-black/30 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${subj.progress}%`, backgroundColor: subj.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        {studentRecord.subjectsCount === 0 ? (
+          <div className="text-center py-12 opacity-60 text-sm">
+            No subjects or topics created yet. Add subjects to view completion telemetry.
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {/* Dynamic subjects list if any */}
+          </div>
+        )}
       </div>
 
     </div>
