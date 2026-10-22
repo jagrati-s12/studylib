@@ -22,15 +22,15 @@ router.get('/', async (req, res, next) => {
     const topics = await Topic.find({ userId });
 
     const totalTopics = topics.length;
-    const completedTopics = topics.filter(t => t.completed).length;
-    const completionRate = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 82;
+    const completedTopics = topics.filter(t => t.completed || t.status === 'done' || t.status === 'completed').length;
+    const completionRate = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
 
     res.json({
       success: true,
       analytics: {
-        weeklyHours: Math.max(weeklyHours, 12.5),
-        streakDays: statsList.length > 0 ? statsList.length : 7,
-        avgConfidence: 4.3,
+        weeklyHours,
+        streakDays: 0,
+        avgConfidence: 0,
         completionRate,
         totalSessions,
         totalStudyMinutes: totalMinutes,

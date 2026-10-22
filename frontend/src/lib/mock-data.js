@@ -12,7 +12,7 @@ export const mockApi = {
     return [];
   },
   async getSubject(id) {
-    return { id, name: 'Sample Subject', color: '#3b82f6', icon: 'BookOpen' };
+    return null;
   },
   async createSubject(data) {
     return { id: 'subj-' + Date.now(), name: data.name || 'New Subject', color: data.color || '#3b82f6', icon: data.icon || 'BookOpen', created_at: new Date().toISOString() };
@@ -30,7 +30,7 @@ export const mockApi = {
     return [];
   },
   async getTopic(id) {
-    return { id, title: 'Sample Topic', status: 'todo', progress: 0 };
+    return null;
   },
   async createTopic(subjectId, data) {
     return { id: 'topic-' + Date.now(), subjectId, title: data.title || 'New Topic', status: 'todo', progress: 0, created_at: new Date().toISOString() };
@@ -70,10 +70,10 @@ export const mockApi = {
   },
   async getAnalytics() {
     return {
-      weeklyHours: 12.5,
-      streakDays: 7,
-      avgConfidence: 4.3,
-      completionRate: 82,
+      weeklyHours: 0,
+      streakDays: 0,
+      avgConfidence: 0,
+      completionRate: 0,
       totalSessions: 0,
       totalStudyMinutes: 0,
       subjectsCount: 0,

@@ -10,11 +10,11 @@ router.get('/stats', async (req, res, next) => {
   try {
     let stats = await PomodoroStat.findOne({ userId: req.user.id }).sort({ _id: -1 });
     if (!stats) {
-      stats = await PomodoroStat.create({
+      stats = {
         userId: req.user.id,
-        sessionsCompleted: 4,
-        totalStudyMinutes: 100
-      });
+        sessionsCompleted: 0,
+        totalStudyMinutes: 0
+      };
     }
     res.json({ success: true, stats });
   } catch (error) {

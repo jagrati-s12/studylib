@@ -2,12 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 
 const PomodoroContext = createContext(undefined);
 
-const DEFAULT_DURATIONS = {
-  pomodoro: 25 * 60,
-  shortBreak: 5 * 60,
-  stopwatch: 0, // Count-up study timer mode
-};
-
 export function PomodoroProvider({ children }) {
   const [mode, setMode] = useState('pomodoro'); // 'pomodoro' | 'shortBreak' | 'stopwatch'
 
@@ -25,7 +19,7 @@ export function PomodoroProvider({ children }) {
   });
 
   const [isRunning, setIsRunning] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(4);
+  const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [miniDismissed, setMiniDismissed] = useState(false);
 
@@ -78,7 +72,6 @@ export function PomodoroProvider({ children }) {
   const resetTimer = () => {
     setIsRunning(false);
     if (mode === 'stopwatch') {
-      // Save or record elapsed time if needed, then reset stopwatch to 0
       const elapsed = times.stopwatch;
       if (elapsed > 60) {
         const addedHours = Number((elapsed / 3600).toFixed(1));
@@ -86,14 +79,7 @@ export function PomodoroProvider({ children }) {
       }
       setTimes((prev) => ({ ...prev, stopwatch: 0 }));
     } else {
-      // If resetting a pomodoro session that was partially completed, log/save partial study time
       const initialTime = durations[mode] || 25 * 60;
-      const elapsedSeconds = initialTime - times[mode];
-      if (mode === 'pomodoro' && elapsedSeconds > 60) {
-        const completedMinutes = Math.round(elapsedSeconds / 60);
-        console.log(`Saved partial focus session: ${completedMinutes} minutes`);
-        // Optionally increment sessions or record analytics if desired
-      }
       setTimes((prev) => ({
         ...prev,
         [mode]: initialTime,

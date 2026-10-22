@@ -41,19 +41,19 @@ export default function ExamPrepPage() {
         const generatedExams = subjects.map((sub, index) => {
           const subTopics = allTopics.filter(t => t.subject_id === sub.id);
           const compCount = subTopics.filter(t => t.status === 'done' || t.status === 'completed').length;
-          const totCount = subTopics.length || 5;
-          const avgConf = subTopics.length > 0 ? Math.round(subTopics.reduce((acc, curr) => acc + (curr.confidence || 4), 0) / subTopics.length) : 4;
+          const totCount = subTopics.length;
+          const avgConf = subTopics.length > 0 ? Math.round(subTopics.reduce((acc, curr) => acc + (curr.confidence || 0), 0) / subTopics.length) : 0;
 
           return {
             id: `ex-${sub.id}`,
             subjectId: sub.id,
-            title: `${sub.name} Comprehensive Certification & Final Exam`,
+            title: `${sub.name} Final Exam`,
             subject: sub.name,
-            date: `2026-12-${String(10 + index).padStart(2, '0')}`,
+            date: sub.dueDate || '',
             totalChapters: totCount,
             completedChapters: compCount,
-            confidence: avgConf * 20, // percentage for display
-            status: index === 2 ? 'completed' : 'upcoming'
+            confidence: avgConf * 20,
+            status: 'upcoming'
           };
         });
 
@@ -63,32 +63,17 @@ export default function ExamPrepPage() {
           const subTopics = allTopics.filter(t => t.subject_id === sub.id);
           const exId = `ex-${sub.id}`;
 
-          if (subTopics.length > 0) {
-            subTopics.forEach((t, i) => {
-              generatedChapters.push({
-                id: `ch-${t.id}`,
-                examId: exId,
-                title: `Chapter ${t.serial_number || i + 1}: ${t.title}`,
-                status: t.status === 'done' ? 'completed' : t.status === 'in_progress' ? 'in_progress' : 'not_started',
-                confidence: t.confidence || ((i % 3) + 3),
-                hoursSpent: (i + 1) * 1.5,
-                notes: t.note || 'Syllabus chapter notes.'
-              });
+          subTopics.forEach((t, i) => {
+            generatedChapters.push({
+              id: `ch-${t.id}`,
+              examId: exId,
+              title: `Chapter ${t.serial_number || i + 1}: ${t.title}`,
+              status: t.status === 'done' ? 'completed' : t.status === 'in_progress' ? 'in_progress' : 'not_started',
+              confidence: t.confidence || 0,
+              hoursSpent: 0,
+              notes: t.note || ''
             });
-          } else {
-            // Fallback default chapters if subject has no topics
-            for (let i = 1; i <= 5; i++) {
-              generatedChapters.push({
-                id: `ch-${sub.id}-${i}`,
-                examId: exId,
-                title: `Chapter ${i}: Core Principles & Practice`,
-                status: i === 1 ? 'completed' : 'not_started',
-                confidence: 4,
-                hoursSpent: i * 2,
-                notes: 'Fundamental concepts.'
-              });
-            }
-          }
+          });
         });
 
         setExams(generatedExams);

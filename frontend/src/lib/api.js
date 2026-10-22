@@ -88,12 +88,12 @@ export const api = {
   async getSubjects() {
     try {
       const res = await safeFetch('/subjects');
-      if (res?.success && Array.isArray(res.subjects) && res.subjects.length > 0) {
+      if (res?.success && Array.isArray(res.subjects)) {
         return res.subjects;
       }
-      return await mockApi.getSubjects();
+      return [];
     } catch {
-      return await mockApi.getSubjects();
+      return [];
     }
   },
 
@@ -101,9 +101,9 @@ export const api = {
     try {
       const res = await safeFetch(`/subjects/${id}`);
       if (res?.success && res.subject) return res.subject;
-      return await mockApi.getSubject(id);
+      return null;
     } catch {
-      return await mockApi.getSubject(id);
+      return null;
     }
   },
 
@@ -153,24 +153,24 @@ export const api = {
   async getAllTopics() {
     try {
       const res = await safeFetch('/topics');
-      if (res?.success && Array.isArray(res.topics) && res.topics.length > 0) {
+      if (res?.success && Array.isArray(res.topics)) {
         return res.topics;
       }
-      return await mockApi.getAllTopics();
+      return [];
     } catch {
-      return await mockApi.getAllTopics();
+      return [];
     }
   },
 
   async getTopics(subjectId) {
     try {
       const res = await safeFetch(`/topics/subject/${subjectId}`);
-      if (res?.success && Array.isArray(res.topics) && res.topics.length > 0) {
+      if (res?.success && Array.isArray(res.topics)) {
         return res.topics;
       }
-      return await mockApi.getTopics(subjectId);
+      return [];
     } catch {
-      return await mockApi.getTopics(subjectId);
+      return [];
     }
   },
 
@@ -178,9 +178,9 @@ export const api = {
     try {
       const res = await safeFetch(`/topics/${id}`);
       if (res?.success && res.topic) return res.topic;
-      return await mockApi.getTopic(id);
+      return null;
     } catch {
-      return await mockApi.getTopic(id);
+      return null;
     }
   },
 
