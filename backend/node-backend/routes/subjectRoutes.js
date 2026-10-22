@@ -72,17 +72,17 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { name, color, icon, sortOrder } = req.body;
-    if (!name || !name.trim()) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ success: false, error: 'Subject name is required' });
     }
 
     const currentCount = await Subject.countDocuments({ userId: req.user.id });
     const subject = await Subject.create({
       userId: req.user.id,
-      name: name.trim(),
-      color: color || '#3b82f6',
-      icon: icon || 'BookOpen',
-      sortOrder: sortOrder !== undefined ? sortOrder : currentCount
+      name: name.trim().slice(0, 100),
+      color: typeof color === 'string' ? color.slice(0, 30) : '#3b82f6',
+      icon: typeof icon === 'string' ? icon.slice(0, 50) : 'BookOpen',
+      sortOrder: sortOrder !== undefined ? (parseInt(sortOrder, 10) || 0) : currentCount
     });
 
     res.status(201).json({ success: true, subject: formatSubject(subject, 0) });
@@ -95,16 +95,16 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, error: 'Invalid subject ID' });
     }
 
     const { name, color, icon, sortOrder } = req.body;
     const updateData = {};
-    if (name !== undefined) updateData.name = name.trim();
-    if (color !== undefined) updateData.color = color;
-    if (icon !== undefined) updateData.icon = icon;
-    if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+    if (name !== undefined && typeof name === 'string') updateData.name = name.trim().slice(0, 100);
+    if (color !== undefined && typeof color === 'string') updateData.color = color.slice(0, 30);
+    if (icon !== undefined && typeof icon === 'string') updateData.icon = icon.slice(0, 50);
+    if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder, 10) || 0;
 
     const subject = await Subject.findOneAndUpdate(
       { _id: id, userId: req.user.id },

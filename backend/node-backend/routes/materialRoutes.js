@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Material = require('../models/Material');
+const Topic = require('../models/Topic');
+const Folder = require('../models/Folder');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -14,14 +16,14 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer storage configuration
+// Multer storage configuration with sanitized filenames
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const safeBaseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeBaseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 50);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `${safeBaseName}-${uniqueSuffix}${ext}`);
   }
@@ -67,8 +69,13 @@ const formatMaterial = (mat) => {
 router.get('/topic/:topicId', async (req, res, next) => {
   try {
     const { topicId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(topicId)) {
-      return res.json({ success: true, materials: [] });
+    if (!topicId || !mongoose.Types.ObjectId.isValid(topicId)) {
+      return res.status(400).json({ success: false, error: 'Valid topic ID is required' });
+    }
+
+    const topicExists = await Topic.exists({ _id: topicId, userId: req.user.id });
+    if (!topicExists) {
+      return res.status(404).json({ success: false, error: 'Topic not found or unauthorized' });
     }
 
     const materials = await Material.find({
@@ -91,11 +98,31 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     }
 
     if (!topicId || !mongoose.Types.ObjectId.isValid(topicId)) {
-      // Remove temporary uploaded file if topicId invalid
       if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
       return res.status(400).json({ success: false, error: 'Valid topic ID is required' });
+    }
+
+    // Verify topic belongs to authenticated user (BOLA/IDOR protection)
+    const topicExists = await Topic.exists({ _id: topicId, userId: req.user.id });
+    if (!topicExists) {
+      if (req.file && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
+      }
+      return res.status(404).json({ success: false, error: 'Topic not found or unauthorized' });
+    }
+
+    let validatedFolderId = null;
+    if (folderId && mongoose.Types.ObjectId.isValid(folderId)) {
+      const folderExists = await Folder.exists({
+        _id: folderId,
+        topicId: new mongoose.Types.ObjectId(topicId),
+        userId: req.user.id
+      });
+      if (folderExists) {
+        validatedFolderId = new mongoose.Types.ObjectId(folderId);
+      }
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
@@ -105,12 +132,14 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) materialType = 'image';
     else if (['mp4', 'webm'].includes(ext)) materialType = 'video';
 
+    const safeTitle = typeof title === 'string' && title.trim() ? title.trim().slice(0, 200) : req.file.originalname.slice(0, 200);
+
     const material = await Material.create({
       userId: req.user.id,
       topicId: new mongoose.Types.ObjectId(topicId),
-      folderId: folderId && mongoose.Types.ObjectId.isValid(folderId) ? new mongoose.Types.ObjectId(folderId) : null,
+      folderId: validatedFolderId,
       materialType,
-      title: title || req.file.originalname,
+      title: safeTitle,
       storageKey: req.file.filename,
       url: `/uploads/${req.file.filename}`,
       mimeType: req.file.mimetype,
@@ -130,22 +159,25 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, error: 'Invalid material ID' });
     }
 
     const material = await Material.findOne({ _id: id, userId: req.user.id });
     if (!material) {
-      return res.status(404).json({ success: false, error: 'Material not found' });
+      return res.status(404).json({ success: false, error: 'Material not found or unauthorized' });
     }
 
-    // Attempt to unlink physical file
-    const filePath = path.join(uploadDir, material.storageKey);
-    if (fs.existsSync(filePath)) {
-      try {
-        fs.unlinkSync(filePath);
-      } catch (err) {
-        console.error('Error removing file:', err);
+    // Path traversal protected unlink
+    if (material.storageKey) {
+      const safeKey = path.basename(material.storageKey);
+      const filePath = path.resolve(uploadDir, safeKey);
+      if (filePath.startsWith(uploadDir) && fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error('Error removing file:', err);
+        }
       }
     }
 

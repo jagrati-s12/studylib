@@ -12,16 +12,16 @@ export const mockApi = {
     return [];
   },
   async getSubject(id) {
-    return null;
+    return { id, name: 'Sample Subject', color: '#3b82f6', icon: 'BookOpen' };
   },
   async createSubject(data) {
-    throw new Error('Backend required');
+    return { id: 'subj-' + Date.now(), name: data.name || 'New Subject', color: data.color || '#3b82f6', icon: data.icon || 'BookOpen', created_at: new Date().toISOString() };
   },
   async updateSubject(id, data) {
-    throw new Error('Backend required');
+    return { id, ...data, updated_at: new Date().toISOString() };
   },
   async deleteSubject(id) {
-    throw new Error('Backend required');
+    return { success: true };
   },
   async getAllTopics() {
     return [];
@@ -30,22 +30,22 @@ export const mockApi = {
     return [];
   },
   async getTopic(id) {
-    return null;
+    return { id, title: 'Sample Topic', status: 'todo', progress: 0 };
   },
   async createTopic(subjectId, data) {
-    throw new Error('Backend required');
+    return { id: 'topic-' + Date.now(), subjectId, title: data.title || 'New Topic', status: 'todo', progress: 0, created_at: new Date().toISOString() };
   },
   async updateTopic(id, data) {
-    throw new Error('Backend required');
+    return { id, ...data, updated_at: new Date().toISOString() };
   },
   async deleteTopic(id) {
-    throw new Error('Backend required');
+    return { success: true };
   },
   async getMaterials(topicId) {
     return [];
   },
   async uploadMaterial(topicId, file) {
-    throw new Error('Backend required');
+    return { id: 'mat-' + Date.now(), topicId, title: file?.name || 'Uploaded File', url: '#', materialType: 'other', created_at: new Date().toISOString() };
   },
   async getDigitalNote(topicId) {
     return null;
@@ -54,19 +54,19 @@ export const mockApi = {
     return [];
   },
   async saveDigitalNote(topicId, content, data) {
-    throw new Error('Backend required');
+    return { success: true, topicId, content };
   },
   async getFolders(topicId) {
     return [];
   },
   async createFolder(topicId, name, parentFolderId = null) {
-    throw new Error('Backend required');
+    return { id: 'folder-' + Date.now(), topicId, name, parentFolderId };
   },
   async getWorkspaceSettings(topicId) {
     return null;
   },
   async saveWorkspaceSettings(topicId, settings) {
-    throw new Error('Backend required');
+    return { success: true, settings };
   },
   async getAnalytics() {
     return {

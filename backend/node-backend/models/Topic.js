@@ -11,10 +11,10 @@ const topicSchema = new mongoose.Schema({
   subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true, index: true },
   serialNumber: { type: Number, default: 1 },
   title: { type: String, required: true, trim: true },
-  status: { 
-    type: String, 
-    enum: ['not_started', 'in_progress', 'completed'], 
-    default: 'not_started' 
+  status: {
+    type: String,
+    enum: ['todo', 'not_started', 'in_progress', 'completed', 'done'],
+    default: 'todo'
   },
   progress: { type: Number, default: 0, min: 0, max: 100 },
   checklist: [checklistItemSchema],

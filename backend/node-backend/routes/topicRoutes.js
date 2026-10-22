@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const Subject = require('../models/Subject');
 const Topic = require('../models/Topic');
 const Material = require('../models/Material');
 const Folder = require('../models/Folder');
@@ -124,7 +125,13 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Valid subject ID is required' });
     }
 
-    if (!title || !title.trim()) {
+    // Verify subject belongs to authenticated user (prevent BOLA/IDOR)
+    const subject = await Subject.findOne({ _id: actualSubjectId, userId: req.user.id });
+    if (!subject) {
+      return res.status(404).json({ success: false, error: 'Subject not found or unauthorized' });
+    }
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ success: false, error: 'Topic title is required' });
     }
 
@@ -135,20 +142,27 @@ router.post('/', async (req, res, next) => {
       actualSerial = highestTopic ? (highestTopic.serialNumber + 1) : 1;
     }
 
+    const rawParentId = parentTopicId || parent_topic_id;
+    let validatedParentId = null;
+    if (rawParentId && mongoose.Types.ObjectId.isValid(rawParentId)) {
+      const parentTopic = await Topic.findOne({ _id: rawParentId, userId: req.user.id });
+      if (parentTopic) {
+        validatedParentId = parentTopic._id;
+      }
+    }
+
     const topic = await Topic.create({
       userId: req.user.id,
       subjectId: actualSubjectId,
-      title: title.trim(),
-      serialNumber: actualSerial,
-      status: status || 'not_started',
-      progress: progress !== undefined ? progress : (status === 'completed' || status === 'done' ? 100 : 0),
-      checklist: checklist || [],
-      tags: tags || [],
-      note: note || '',
+      title: title.trim().slice(0, 255),
+      serialNumber: Math.max(0, parseInt(actualSerial, 10) || 1),
+      status: typeof status === 'string' ? status.slice(0, 50) : 'not_started',
+      progress: progress !== undefined ? Math.min(100, Math.max(0, parseInt(progress, 10) || 0)) : (status === 'completed' || status === 'done' ? 100 : 0),
+      checklist: Array.isArray(checklist) ? checklist.slice(0, 100) : [],
+      tags: Array.isArray(tags) ? tags.map(t => String(t).slice(0, 50)).slice(0, 20) : [],
+      note: typeof note === 'string' ? note.slice(0, 10000) : '',
       dueDate: dueDate || due_date || null,
-      parentTopicId: (parentTopicId || parent_topic_id) && mongoose.Types.ObjectId.isValid(parentTopicId || parent_topic_id)
-        ? (parentTopicId || parent_topic_id)
-        : null
+      parentTopicId: validatedParentId
     });
 
     res.status(201).json({ success: true, topic: formatTopic(topic, 0) });
@@ -181,21 +195,29 @@ router.put('/:id', async (req, res, next) => {
     } = req.body;
 
     const updateData = {};
-    if (title !== undefined) updateData.title = title.trim();
+    if (title !== undefined && typeof title === 'string') updateData.title = title.trim().slice(0, 255);
     if (serialNumber !== undefined || serial_number !== undefined) {
-      updateData.serialNumber = serialNumber !== undefined ? serialNumber : serial_number;
+      const s = serialNumber !== undefined ? serialNumber : serial_number;
+      updateData.serialNumber = Math.max(0, parseInt(s, 10) || 1);
     }
-    if (status !== undefined) updateData.status = status;
-    if (progress !== undefined) updateData.progress = progress;
-    if (checklist !== undefined) updateData.checklist = checklist;
-    if (tags !== undefined) updateData.tags = tags;
-    if (note !== undefined) updateData.note = note;
+    if (status !== undefined && typeof status === 'string') updateData.status = status.slice(0, 50);
+    if (progress !== undefined) {
+      updateData.progress = Math.min(100, Math.max(0, parseInt(progress, 10) || 0));
+    }
+    if (checklist !== undefined && Array.isArray(checklist)) updateData.checklist = checklist.slice(0, 100);
+    if (tags !== undefined && Array.isArray(tags)) updateData.tags = tags.map(t => String(t).slice(0, 50)).slice(0, 20);
+    if (note !== undefined && typeof note === 'string') updateData.note = note.slice(0, 10000);
     if (dueDate !== undefined || due_date !== undefined) {
       updateData.dueDate = dueDate !== undefined ? dueDate : due_date;
     }
     if (parentTopicId !== undefined || parent_topic_id !== undefined) {
       const pid = parentTopicId !== undefined ? parentTopicId : parent_topic_id;
-      updateData.parentTopicId = pid && mongoose.Types.ObjectId.isValid(pid) ? pid : null;
+      if (pid && mongoose.Types.ObjectId.isValid(pid) && String(pid) !== String(id)) {
+        const parentTopic = await Topic.findOne({ _id: pid, userId: req.user.id });
+        updateData.parentTopicId = parentTopic ? parentTopic._id : null;
+      } else {
+        updateData.parentTopicId = null;
+      }
     }
 
     const topic = await Topic.findOneAndUpdate(
@@ -205,7 +227,7 @@ router.put('/:id', async (req, res, next) => {
     );
 
     if (!topic) {
-      return res.status(404).json({ success: false, error: 'Topic not found' });
+      return res.status(404).json({ success: false, error: 'Topic not found or unauthorized' });
     }
 
     const count = await Material.countDocuments({ topicId: topic._id, userId: req.user.id });

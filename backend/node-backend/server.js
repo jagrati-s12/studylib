@@ -12,6 +12,9 @@ connectDB();
 
 const app = express();
 
+// Trust reverse proxy if present
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(helmet());
 
@@ -60,6 +63,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   maxAge: '1d',
   setHeaders: (res) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
   }
 }));
 
@@ -74,6 +78,7 @@ app.use('/api/subjects', require('./routes/subjectRoutes'));
 app.use('/api/topics', require('./routes/topicRoutes'));
 app.use('/api/materials', require('./routes/materialRoutes'));
 app.use('/api/study', require('./routes/studyRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

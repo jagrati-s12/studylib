@@ -7,25 +7,33 @@ const router = express.Router();
 
 router.use(protect);
 
+// Helper to escape regex special characters (mitigate ReDoS)
+const escapeRegex = (str) => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 // Get all notes with pagination and search filtering
 router.get('/', async (req, res, next) => {
   try {
     const { search, category, page = 1, limit = 50 } = req.query;
     const query = { userId: req.user.id };
 
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } }
-      ];
+    if (search && typeof search === 'string') {
+      const sanitizedSearch = escapeRegex(search.trim().slice(0, 100));
+      if (sanitizedSearch) {
+        query.$or = [
+          { title: { $regex: sanitizedSearch, $options: 'i' } },
+          { content: { $regex: sanitizedSearch, $options: 'i' } }
+        ];
+      }
     }
 
-    if (category && category !== 'All') {
-      query.category = category;
+    if (category && typeof category === 'string' && category !== 'All') {
+      query.category = category.trim().slice(0, 50);
     }
 
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     const notes = await Note.find(query)
@@ -39,7 +47,7 @@ router.get('/', async (req, res, next) => {
       success: true,
       count: notes.length,
       total,
-      pages: Math.ceil(total / limitNum),
+      pages: Math.ceil(total / limitNum) || 1,
       currentPage: pageNum,
       notes
     });
@@ -52,7 +60,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       res.status(400);
       throw new Error('Invalid note ID format');
     }
@@ -75,6 +83,10 @@ router.post('/', async (req, res, next) => {
     const { id, title, content, category } = req.body;
     let note;
 
+    const sanitizedTitle = typeof title === 'string' ? title.trim().slice(0, 255) : undefined;
+    const sanitizedContent = typeof content === 'string' ? content : (content !== undefined ? String(content) : undefined);
+    const sanitizedCategory = typeof category === 'string' ? category.trim().slice(0, 50) : undefined;
+
     if (id) {
       if (!mongoose.Types.ObjectId.isValid(id)) {
         res.status(400);
@@ -84,9 +96,9 @@ router.post('/', async (req, res, next) => {
       note = await Note.findOneAndUpdate(
         { _id: id, userId: req.user.id },
         {
-          title: title !== undefined ? title.trim() : undefined,
-          content: content !== undefined ? content : undefined,
-          category: category !== undefined ? category.trim() : undefined,
+          ...(sanitizedTitle !== undefined && { title: sanitizedTitle }),
+          ...(sanitizedContent !== undefined && { content: sanitizedContent }),
+          ...(sanitizedCategory !== undefined && { category: sanitizedCategory }),
           updatedAt: Date.now()
         },
         { new: true, runValidators: true }
@@ -99,9 +111,9 @@ router.post('/', async (req, res, next) => {
     } else {
       note = await Note.create({
         userId: req.user.id,
-        title: title ? title.trim() : 'Untitled Note',
-        content: content || '',
-        category: category ? category.trim() : 'General'
+        title: sanitizedTitle || 'Untitled Note',
+        content: sanitizedContent || '',
+        category: sanitizedCategory || 'General'
       });
     }
 

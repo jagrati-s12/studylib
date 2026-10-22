@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(protect);
 
-router.get('/stats', async (req, res) => {
+router.get('/stats', async (req, res, next) => {
   try {
     let stats = await PomodoroStat.findOne({ userId: req.user.id }).sort({ _id: -1 });
     if (!stats) {
@@ -18,21 +18,24 @@ router.get('/stats', async (req, res) => {
     }
     res.json({ success: true, stats });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
-router.post('/stats', async (req, res) => {
+router.post('/stats', async (req, res, next) => {
   try {
     const { sessionsCompleted, totalStudyMinutes } = req.body;
+    const sanitizedSessions = Math.min(1000, Math.max(0, parseInt(sessionsCompleted, 10) || 0));
+    const sanitizedMinutes = Math.min(100000, Math.max(0, parseInt(totalStudyMinutes, 10) || 0));
+
     const stats = await PomodoroStat.create({
       userId: req.user.id,
-      sessionsCompleted: sessionsCompleted || 0,
-      totalStudyMinutes: totalStudyMinutes || 0
+      sessionsCompleted: sanitizedSessions,
+      totalStudyMinutes: sanitizedMinutes
     });
     res.json({ success: true, stats });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 

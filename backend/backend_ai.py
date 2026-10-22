@@ -23,8 +23,13 @@ def ai_chat():
     prompt = data.get("prompt", "")
     notes_context = data.get("notesContext", [])
 
-    if not prompt:
-        return jsonify({"error": "Prompt is required"}), 400
+    if not prompt or not isinstance(prompt, str) or not prompt.strip():
+        return jsonify({"error": "Valid prompt string is required"}), 400
+
+    if len(prompt) > 5000:
+        return jsonify({"error": "Prompt exceeds maximum allowed length of 5000 characters"}), 400
+
+    prompt = prompt.strip()
 
     try:
         system_instruction = (
@@ -91,12 +96,13 @@ def analytics_insights():
         })
 
     except Exception as e:
+        print(f"[AI Service Error]: {e}")
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": "AI service encountered an error processing your request"
         }), 500
 
 
 if __name__ == "__main__":
     print("Starting Notie Python AI Backend on port 5000...")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

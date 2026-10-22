@@ -7,13 +7,8 @@ let isBackendAlive = null;
 let lastCheckTime = 0;
 const CHECK_INTERVAL = 15000; // 15 seconds
 
-// Safe fetch wrapper with fast timeout and automatic instant mock fallback
-async function safeFetch(endpoint, options = {}, timeoutMs = 600) {
-  // If backend was checked and found offline recently, fail fast instantly (0ms)
-  if (isBackendAlive === false && Date.now() - lastCheckTime < CHECK_INTERVAL) {
-    throw new Error('Backend is currently offline, using instant local cache');
-  }
-
+// Safe fetch wrapper with reliable timeout and direct backend communication
+async function safeFetch(endpoint, options = {}, timeoutMs = 10000) {
   const token = localStorage.getItem('notie_token');
   const headers = {
     ...(options.headers || {}),
@@ -49,10 +44,7 @@ async function safeFetch(endpoint, options = {}, timeoutMs = 600) {
     return data;
   } catch (err) {
     clearTimeout(id);
-    // Mark backend as offline so subsequent concurrent calls resolve in 0ms
-    isBackendAlive = false;
-    lastCheckTime = Date.now();
-    throw err; // Let caller fallback to mockApi instantly
+    throw err;
   }
 }
 
@@ -238,7 +230,7 @@ export const api = {
   async getMaterials(topicId) {
     try {
       const res = await safeFetch(`/materials/topic/${topicId}`);
-      if (res?.success && Array.isArray(res.materials) && res.materials.length > 0) {
+      if (res?.success && Array.isArray(res.materials)) {
         return res.materials;
       }
       return await mockApi.getMaterials(topicId);
